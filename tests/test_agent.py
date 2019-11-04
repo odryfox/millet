@@ -6,13 +6,13 @@ from src.dialogus.agent import Agent
 
 
 def test_echo_agent():
-    def strategy_echo(message: str) -> List[str]:
+    def echo_skill(message: str) -> List[str]:
         return [message]
 
-    def strategies_activator(message: str) -> List[Callable[[str], List[str]]]:
-        return [strategy_echo]
+    def skill_classifier(message: str) -> List[Callable[[str], List[str]]]:
+        return [echo_skill]
 
-    agent = Agent(strategies_activator=strategies_activator)
+    agent = Agent(skill_classifier=skill_classifier)
 
     input_message = 'Hello'
     output_message = agent.answer_me(input_message)
@@ -21,13 +21,13 @@ def test_echo_agent():
 
 
 def test_duplicate_agent():
-    def strategy_duplicate(message: str) -> List[str]:
+    def duplicate_skill(message: str) -> List[str]:
         return [message * 2]
 
-    def strategies_activator(message: str) -> List[Callable[[str], List[str]]]:
-        return [strategy_duplicate]
+    def skill_classifier(message: str) -> List[Callable[[str], List[str]]]:
+        return [duplicate_skill]
 
-    agent = Agent(strategies_activator=strategies_activator)
+    agent = Agent(skill_classifier=skill_classifier)
 
     input_message = 'Hello'
     output_message = agent.answer_me(input_message)
@@ -35,29 +35,29 @@ def test_duplicate_agent():
     assert output_message == ['HelloHello']
 
 
-def test_error_type_of_strategy_activator():
+def test_error_type_of_skill_classifier():
     with pytest.raises(TypeError):
-        Agent(strategies_activator=None)
+        Agent(skill_classifier=None)
 
 
-def test_choice_of_strategy():
-    def strategy_greeting(message: str) -> List[str]:
+def test_choice_of_skills():
+    def greeting_skill(message: str) -> List[str]:
         return ['Hi']
 
-    def strategy_parting(message: str) -> List[str]:
+    def parting_skill(message: str) -> List[str]:
         return ['Bye']
 
-    def strategies_activator(message: str) -> List[Callable[[str], List[str]]]:
-        strategies = []
+    def skill_classifier(message: str) -> List[Callable[[str], List[str]]]:
+        skills = []
         if 'Hello' in message:
-            strategies.append(strategy_greeting)
+            skills.append(greeting_skill)
 
         if 'Goodbye' in message:
-            strategies.append(strategy_parting)
+            skills.append(parting_skill)
 
-        return strategies
+        return skills
 
-    agent = Agent(strategies_activator=strategies_activator)
+    agent = Agent(skill_classifier=skill_classifier)
 
     input_message = 'Hello'
     output_message = agent.answer_me(input_message)

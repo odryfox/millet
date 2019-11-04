@@ -1,4 +1,4 @@
-from typing import Optional, Callable, List
+from typing import Callable, List
 
 import pytest
 
@@ -9,10 +9,10 @@ def test_echo_agent():
     def strategy_echo(message: str) -> List[str]:
         return [message]
 
-    def strategy_activator(message: str) -> Optional[Callable[[str], List[str]]]:
-        return strategy_echo
+    def strategies_activator(message: str) -> List[Callable[[str], List[str]]]:
+        return [strategy_echo]
 
-    agent = Agent(strategy_activator=strategy_activator)
+    agent = Agent(strategies_activator=strategies_activator)
 
     input_message = 'Hello'
     output_message = agent.answer_me(input_message)
@@ -24,10 +24,10 @@ def test_duplicate_agent():
     def strategy_duplicate(message: str) -> List[str]:
         return [message * 2]
 
-    def strategy_activator(message: str) -> Optional[Callable[[str], List[str]]]:
-        return strategy_duplicate
+    def strategies_activator(message: str) -> List[Callable[[str], List[str]]]:
+        return [strategy_duplicate]
 
-    agent = Agent(strategy_activator=strategy_activator)
+    agent = Agent(strategies_activator=strategies_activator)
 
     input_message = 'Hello'
     output_message = agent.answer_me(input_message)
@@ -37,7 +37,7 @@ def test_duplicate_agent():
 
 def test_error_type_of_strategy_activator():
     with pytest.raises(TypeError):
-        Agent(strategy_activator=None)
+        Agent(strategies_activator=None)
 
 
 def test_choice_of_strategy():
@@ -47,16 +47,17 @@ def test_choice_of_strategy():
     def strategy_parting(message: str) -> List[str]:
         return ['Bye']
 
-    def strategy_activator(message: str) -> Optional[Callable[[str], List[str]]]:
-        if message == 'Hello':
-            return strategy_greeting
+    def strategies_activator(message: str) -> List[Callable[[str], List[str]]]:
+        strategies = []
+        if 'Hello' in message:
+            strategies.append(strategy_greeting)
 
-        if message == 'Goodbye':
-            return strategy_parting
+        if 'Goodbye' in message:
+            strategies.append(strategy_parting)
 
-        return None
+        return strategies
 
-    agent = Agent(strategy_activator=strategy_activator)
+    agent = Agent(strategies_activator=strategies_activator)
 
     input_message = 'Hello'
     output_message = agent.answer_me(input_message)
@@ -67,6 +68,11 @@ def test_choice_of_strategy():
     output_message = agent.answer_me(input_message)
 
     assert output_message == ['Bye']
+
+    input_message = 'Hello. Goodbye.'
+    output_message = agent.answer_me(input_message)
+
+    assert output_message == ['Hi', 'Bye']
 
     input_message = 'How are you?'
     output_message = agent.answer_me(input_message)

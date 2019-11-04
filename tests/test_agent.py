@@ -1,5 +1,7 @@
 from typing import Optional, Callable, List
 
+import pytest
+
 from src.dialogus.agent import Agent
 
 
@@ -33,13 +35,9 @@ def test_duplicate_agent():
     assert output_message == ['HelloHello']
 
 
-def test_empty_strategy_activator():
-    agent = Agent(strategy_activator=None)
-
-    input_message = 'Hello'
-    output_message = agent.answer_me(input_message)
-
-    assert output_message == []
+def test_error_type_of_strategy_activator():
+    with pytest.raises(TypeError):
+        Agent(strategy_activator=None)
 
 
 def test_choice_of_strategy():

@@ -81,16 +81,32 @@ def test_choice_of_skills():
 
 
 def test_continuous_skill():
-    def continuous_skill(message: str, state: int) -> Tuple[List[str], int]:
+    def age_skill(message: str, state: int) -> Tuple[List[str], int]:
         if state == 0:
             return ['How old are you?'], 1
         if state == 1:
             return ['Ok'], 0
 
+    def meeting_skill(message: str, state: int) -> Tuple[List[str], int]:
+        if state == 0:
+            return ['What is your name?'], 1
+        if state == 1:
+            return [f'Nice to meet you {message}!'], 0
+
     def skill_classifier(message: str) -> List[Callable[[str], Tuple[List[str], int]]]:
-        return [continuous_skill]
+        skills = []
+        if 'Hello' in message:
+            skills.append(meeting_skill)
+
+        if 'age' in message:
+            skills.append(age_skill)
+
+        return skills
 
     agent = Agent(skill_classifier=skill_classifier)
 
-    assert agent.answer_me('Hello') == ['How old are you?']
+    assert agent.answer_me('Hello') == ['What is your name?']
+    assert agent.answer_me('John') == ['Nice to meet you John!']
+
+    assert agent.answer_me('What about age?') == ['How old are you?']
     assert agent.answer_me('23') == ['Ok']

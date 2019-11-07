@@ -13,11 +13,9 @@ def test_echo_agent():
         return [echo_skill]
 
     agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user('user_1')
 
-    input_message = 'Hello'
-    output_message = agent.answer_me(input_message, 'user_1')
-
-    assert output_message == [input_message]
+    assert conversation.query('Hello') == ['Hello']
 
 
 def test_duplicate_agent():
@@ -28,11 +26,9 @@ def test_duplicate_agent():
         return [duplicate_skill]
 
     agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user('user_1')
 
-    input_message = 'Hello'
-    output_message = agent.answer_me(input_message, 'user_1')
-
-    assert output_message == ['HelloHello']
+    assert conversation.query('Hello') == ['HelloHello']
 
 
 def test_error_type_of_skill_classifier():
@@ -58,26 +54,12 @@ def test_choice_of_skills():
         return skills
 
     agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user('user_1')
 
-    input_message = 'Hello'
-    output_message = agent.answer_me(input_message, 'user_1')
-
-    assert output_message == ['Hi']
-
-    input_message = 'Goodbye'
-    output_message = agent.answer_me(input_message, 'user_1')
-
-    assert output_message == ['Bye']
-
-    input_message = 'Hello. Goodbye.'
-    output_message = agent.answer_me(input_message, 'user_1')
-
-    assert output_message == ['Hi', 'Bye']
-
-    input_message = 'How are you?'
-    output_message = agent.answer_me(input_message, 'user_1')
-
-    assert output_message == []
+    assert conversation.query('Hello') == ['Hi']
+    assert conversation.query('Goodbye') == ['Bye']
+    assert conversation.query('Hello. Goodbye.') == ['Hi', 'Bye']
+    assert conversation.query('How are you?') == []
 
 
 def test_continuous_skill():
@@ -104,15 +86,16 @@ def test_continuous_skill():
         return skills
 
     agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user('user_1')
 
-    assert agent.answer_me('Hello', 'user_1') == ['What is your name?']
-    assert agent.answer_me('John', 'user_1') == ['Nice to meet you John!']
+    assert conversation.query('Hello') == ['What is your name?']
+    assert conversation.query('John') == ['Nice to meet you John!']
 
-    assert agent.answer_me('What about age?', 'user_1') == ['How old are you?']
-    assert agent.answer_me('23', 'user_1') == ['Ok']
+    assert conversation.query('What about age?') == ['How old are you?']
+    assert conversation.query('23') == ['Ok']
 
-    assert agent.answer_me('Hello', 'user_1') == ['What is your name?']
-    assert agent.answer_me('What about age?', 'user_1') == ['How old are you?']
+    assert conversation.query('Hello') == ['What is your name?']
+    assert conversation.query('What about age?') == ['How old are you?']
 
 
 def test_separation_of_agent_context_on_users():
@@ -131,9 +114,32 @@ def test_separation_of_agent_context_on_users():
         return skills
 
     agent = Agent(skill_classifier=skill_classifier)
+    conversation_with_user_1 = agent.conversation_with_user('user_1')
+    conversation_with_user_2 = agent.conversation_with_user('user_2')
 
-    assert agent.answer_me('What about age?', 'user_1') == ['How old are you?']
-    assert agent.answer_me('What about age?', 'user_2') == ['How old are you?']
+    assert conversation_with_user_1.query('What about age?') == ['How old are you?']
+    assert conversation_with_user_2.query('What about age?') == ['How old are you?']
 
-    assert agent.answer_me('23', 'user_1') == ['Ok']
-    assert agent.answer_me('25', 'user_2') == ['Ok']
+    assert conversation_with_user_1.query('23') == ['Ok']
+    assert conversation_with_user_2.query('25') == ['Ok']
+
+
+def test_agent_query_without_conversation():
+    def age_skill(message: str, state: int) -> Tuple[List[str], int]:
+        if state == 0:
+            return ['How old are you?'], 1
+        if state == 1:
+            return ['Ok'], 0
+
+    def skill_classifier(message: str) -> List[Callable[[str], Tuple[List[str], int]]]:
+        skills = []
+
+        if 'age' in message:
+            skills.append(age_skill)
+
+        return skills
+
+    agent = Agent(skill_classifier=skill_classifier)
+
+    assert agent.query('What about age?', 'user_1') == ['How old are you?']
+    assert agent.query('23', 'user_1') == ['Ok']

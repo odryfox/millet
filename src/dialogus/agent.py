@@ -1,6 +1,15 @@
 from typing import Callable, List, Tuple
 
 
+class Conversation:
+    def __init__(self, agent: 'Agent', user_id: str):
+        self.agent = agent
+        self.user_id = user_id
+
+    def query(self, message: str) -> List[str]:
+        return self.agent.query(message, self.user_id)
+
+
 class Agent:
     def __init__(self, skill_classifier: Callable[[str], List[Callable[[str], Tuple[List[str], int]]]]):
         if not callable(skill_classifier):
@@ -9,6 +18,9 @@ class Agent:
         self.__skill_classifier = skill_classifier
         self.__context = dict()
 
+    def conversation_with_user(self, user_id: str) -> Conversation:
+        return Conversation(agent=self, user_id=user_id)
+
     def __load_user_context(self, user_id: str) -> dict:
         user_context = self.__context.get(user_id, dict(current_skill_state=None, current_skill=None))
         return user_context
@@ -16,7 +28,7 @@ class Agent:
     def __save_user_context(self, user_id: str, user_context: dict):
         self.__context[user_id] = user_context
 
-    def answer_me(self, message: str, user_id: str) -> List[str]:
+    def query(self, message: str, user_id: str) -> List[str]:
         user_context = self.__load_user_context(user_id)
 
         current_skill_state = user_context['current_skill_state']

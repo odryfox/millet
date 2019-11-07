@@ -110,3 +110,6 @@ def test_continuous_skill():
 
     assert agent.answer_me('What about age?') == ['How old are you?']
     assert agent.answer_me('23') == ['Ok']
+
+    assert agent.answer_me('Hello') == ['What is your name?']
+    assert agent.answer_me('What about age?') == ['How old are you?']

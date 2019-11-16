@@ -49,6 +49,7 @@ def test_choice_of_skills():
 
     def skill_classifier(message: str) -> List[Skill]:
         skills = []
+
         if 'Hello' in message:
             skills.append(GreetingSkill())
 
@@ -66,32 +67,15 @@ def test_choice_of_skills():
     assert conversation.query('How are you?') == []
 
 
-def test_continuous_skill():
-    class AgeSkill(Skill):
-        def run(self, message: str) -> List[str]:
-            if self.state == 0:
-                self.state = 1
-                return ['How old are you?']
-            if self.state == 1:
-                self.state = 0
-                return ['Ok']
-
-    class MeetingSkill(Skill):
-        def run(self, message: str) -> List[str]:
-            if self.state == 0:
-                self.state = 1
-                return ['What is your name?']
-            if self.state == 1:
-                self.state = 0
-                return [f'Nice to meet you {message}!']
-
+def test_continuous_skill(meeting_skill: Skill, age_skill: Skill):
     def skill_classifier(message: str) -> List[Skill]:
         skills = []
+
         if 'Hello' in message:
-            skills.append(MeetingSkill())
+            skills.append(meeting_skill)
 
         if 'age' in message:
-            skills.append(AgeSkill())
+            skills.append(age_skill)
 
         return skills
 
@@ -108,21 +92,12 @@ def test_continuous_skill():
     assert conversation.query('What about age?') == ['How old are you?']
 
 
-def test_separation_of_agent_context_on_users():
-    class AgeSkill(Skill):
-        def run(self, message: str) -> List[str]:
-            if self.state == 0:
-                self.state = 1
-                return ['How old are you?']
-            if self.state == 1:
-                self.state = 0
-                return ['Ok']
-
+def test_separation_of_agent_context_on_users(age_skill: Skill):
     def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if 'age' in message:
-            skills.append(AgeSkill())
+            skills.append(age_skill)
 
         return skills
 
@@ -137,21 +112,12 @@ def test_separation_of_agent_context_on_users():
     assert conversation_with_user_2.query('25') == ['Ok']
 
 
-def test_agent_query_without_conversation():
-    class AgeSkill(Skill):
-        def run(self, message: str) -> List[str]:
-            if self.state == 0:
-                self.state = 1
-                return ['How old are you?']
-            if self.state == 1:
-                self.state = 0
-                return ['Ok']
-
+def test_agent_query_without_conversation(age_skill: Skill):
     def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if 'age' in message:
-            skills.append(AgeSkill())
+            skills.append(age_skill)
 
         return skills
 

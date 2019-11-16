@@ -32,7 +32,7 @@ class Agent:
         return Conversation(agent=self, user_id=user_id)
 
     def __load_user_context(self, user_id: str) -> dict:
-        user_context = self.__context.get(user_id, dict(current_skill_state=None, current_skill=None))
+        user_context = self.__context.get(user_id, dict(current_skill_state=0, current_skill=None))
         return user_context
 
     def __save_user_context(self, user_id: str, user_context: dict):
@@ -40,15 +40,22 @@ class Agent:
 
     def query(self, message: str, user_id: str) -> List[str]:
         user_context = self.__load_user_context(user_id)
-        current_skill = user_context['current_skill']
+
+        current_skill_state = 0
+        current_skill = None
 
         skills = self.__skill_classifier(message)
-        if not skills and current_skill:
-            skills = [current_skill]
+        if not skills:
+            current_skill_state = user_context['current_skill_state']
+            current_skill = user_context['current_skill']
+
+            if current_skill:
+                skills = [current_skill]
 
         answers = []
 
         for skill in skills:
+            skill.state = current_skill_state
             answers += skill.run(message)
             current_skill_state = skill.state
 
@@ -58,6 +65,7 @@ class Agent:
                 current_skill = skill
                 break
 
+        user_context['current_skill_state'] = current_skill_state
         user_context['current_skill'] = current_skill
         self.__save_user_context(user_id, user_context)
 

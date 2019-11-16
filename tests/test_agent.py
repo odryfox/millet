@@ -1,16 +1,17 @@
-from typing import Callable, List, Tuple
+from typing import List
 
 import pytest
 
-from src.dialogus.agent import Agent
+from src.dialogus.agent import Agent, Skill
 
 
 def test_echo_agent():
-    def echo_skill(message: str, state: int) -> Tuple[List[str], int]:
-        return [message], 0
+    class EchoSkill(Skill):
+        def run(self, message: str) -> List[str]:
+            return [message]
 
-    def skill_classifier(message: str) -> List[Callable[[str], Tuple[List[str], int]]]:
-        return [echo_skill]
+    def skill_classifier(message: str) -> List[Skill]:
+        return [EchoSkill()]
 
     agent = Agent(skill_classifier=skill_classifier)
     conversation = agent.conversation_with_user('user_1')
@@ -19,11 +20,12 @@ def test_echo_agent():
 
 
 def test_duplicate_agent():
-    def duplicate_skill(message: str, state: int) -> Tuple[List[str], int]:
-        return [message * 2], 0
+    class DuplicateSkill(Skill):
+        def run(self, message: str) -> List[str]:
+            return [message * 2]
 
-    def skill_classifier(message: str) -> List[Callable[[str], Tuple[List[str], int]]]:
-        return [duplicate_skill]
+    def skill_classifier(message: str) -> List[Skill]:
+        return [DuplicateSkill()]
 
     agent = Agent(skill_classifier=skill_classifier)
     conversation = agent.conversation_with_user('user_1')
@@ -37,19 +39,21 @@ def test_error_type_of_skill_classifier():
 
 
 def test_choice_of_skills():
-    def greeting_skill(message: str, state: int) -> Tuple[List[str], int]:
-        return ['Hi'], 0
+    class GreetingSkill(Skill):
+        def run(self, message: str) -> List[str]:
+            return ['Hi']
 
-    def parting_skill(message: str, state: int) -> Tuple[List[str], int]:
-        return ['Bye'], 0
+    class PartingSkill(Skill):
+        def run(self, message: str) -> List[str]:
+            return ['Bye']
 
-    def skill_classifier(message: str) -> List[Callable[[str], Tuple[List[str], int]]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
         if 'Hello' in message:
-            skills.append(greeting_skill)
+            skills.append(GreetingSkill())
 
         if 'Goodbye' in message:
-            skills.append(parting_skill)
+            skills.append(PartingSkill())
 
         return skills
 
@@ -63,25 +67,31 @@ def test_choice_of_skills():
 
 
 def test_continuous_skill():
-    def age_skill(message: str, state: int) -> Tuple[List[str], int]:
-        if state == 0:
-            return ['How old are you?'], 1
-        if state == 1:
-            return ['Ok'], 0
+    class AgeSkill(Skill):
+        def run(self, message: str) -> List[str]:
+            if self.state == 0:
+                self.state = 1
+                return ['How old are you?']
+            if self.state == 1:
+                self.state = 0
+                return ['Ok']
 
-    def meeting_skill(message: str, state: int) -> Tuple[List[str], int]:
-        if state == 0:
-            return ['What is your name?'], 1
-        if state == 1:
-            return [f'Nice to meet you {message}!'], 0
+    class MeetingSkill(Skill):
+        def run(self, message: str) -> List[str]:
+            if self.state == 0:
+                self.state = 1
+                return ['What is your name?']
+            if self.state == 1:
+                self.state = 0
+                return [f'Nice to meet you {message}!']
 
-    def skill_classifier(message: str) -> List[Callable[[str], Tuple[List[str], int]]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
         if 'Hello' in message:
-            skills.append(meeting_skill)
+            skills.append(MeetingSkill())
 
         if 'age' in message:
-            skills.append(age_skill)
+            skills.append(AgeSkill())
 
         return skills
 
@@ -99,17 +109,20 @@ def test_continuous_skill():
 
 
 def test_separation_of_agent_context_on_users():
-    def age_skill(message: str, state: int) -> Tuple[List[str], int]:
-        if state == 0:
-            return ['How old are you?'], 1
-        if state == 1:
-            return ['Ok'], 0
+    class AgeSkill(Skill):
+        def run(self, message: str) -> List[str]:
+            if self.state == 0:
+                self.state = 1
+                return ['How old are you?']
+            if self.state == 1:
+                self.state = 0
+                return ['Ok']
 
-    def skill_classifier(message: str) -> List[Callable[[str], Tuple[List[str], int]]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if 'age' in message:
-            skills.append(age_skill)
+            skills.append(AgeSkill())
 
         return skills
 
@@ -125,17 +138,20 @@ def test_separation_of_agent_context_on_users():
 
 
 def test_agent_query_without_conversation():
-    def age_skill(message: str, state: int) -> Tuple[List[str], int]:
-        if state == 0:
-            return ['How old are you?'], 1
-        if state == 1:
-            return ['Ok'], 0
+    class AgeSkill(Skill):
+        def run(self, message: str) -> List[str]:
+            if self.state == 0:
+                self.state = 1
+                return ['How old are you?']
+            if self.state == 1:
+                self.state = 0
+                return ['Ok']
 
-    def skill_classifier(message: str) -> List[Callable[[str], Tuple[List[str], int]]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if 'age' in message:
-            skills.append(age_skill)
+            skills.append(AgeSkill())
 
         return skills
 

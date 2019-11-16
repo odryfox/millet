@@ -1,4 +1,14 @@
-from typing import Callable, List, Tuple
+from abc import ABC, abstractmethod
+from typing import Callable, List
+
+
+class Skill(ABC):
+    def __init__(self):
+        self.state = 0
+
+    @abstractmethod
+    def run(self, message: str) -> List[str]:
+        pass
 
 
 class Conversation:
@@ -11,7 +21,7 @@ class Conversation:
 
 
 class Agent:
-    def __init__(self, skill_classifier: Callable[[str], List[Callable[[str], Tuple[List[str], int]]]]):
+    def __init__(self, skill_classifier: Callable[[str], List[Skill]]):
         if not callable(skill_classifier):
             raise TypeError('skill_classifier must be a function')
 
@@ -30,34 +40,25 @@ class Agent:
 
     def query(self, message: str, user_id: str) -> List[str]:
         user_context = self.__load_user_context(user_id)
-
-        current_skill_state = user_context['current_skill_state']
         current_skill = user_context['current_skill']
+
+        skills = self.__skill_classifier(message)
+        if not skills and current_skill:
+            skills = [current_skill]
 
         answers = []
 
-        skills = self.__skill_classifier(message)
-        if skills:
-            current_skill_state = 0
-        else:
-            if current_skill:
-                skills = [current_skill]
-
         for skill in skills:
-            skill_result = skill(message, current_skill_state)
-            current_skill_state = skill_result[1]
-            answers += skill_result[0]
+            answers += skill.run(message)
+            current_skill_state = skill.state
 
             if current_skill_state == 0:
-                current_skill_state = None
                 current_skill = None
             else:
                 current_skill = skill
                 break
 
-        user_context['current_skill_state'] = current_skill_state
         user_context['current_skill'] = current_skill
-
         self.__save_user_context(user_id, user_context)
 
         return answers

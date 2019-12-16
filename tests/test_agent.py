@@ -14,7 +14,7 @@ def test_echo_agent():
         return [EchoSkill()]
 
     agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user('user_1')
+    conversation = agent.conversation_with_user('Bob')
 
     assert conversation.query('Hello') == ['Hello']
 
@@ -28,7 +28,7 @@ def test_duplicate_agent():
         return [DuplicateSkill()]
 
     agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user('user_1')
+    conversation = agent.conversation_with_user('Bob')
 
     assert conversation.query('Hello') == ['HelloHello']
 
@@ -59,7 +59,7 @@ def test_choice_of_skills():
         return skills
 
     agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user('user_1')
+    conversation = agent.conversation_with_user('Bob')
 
     assert conversation.query('Hello') == ['Hi']
     assert conversation.query('Goodbye') == ['Bye']
@@ -80,13 +80,13 @@ def test_continuous_skill(meeting_skill: Skill, age_skill: Skill):
         return skills
 
     agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user('user_1')
+    conversation = agent.conversation_with_user('Bob')
 
     assert conversation.query('Hello') == ['What is your name?']
-    assert conversation.query('John') == ['Nice to meet you John!']
+    assert conversation.query('Bob') == ['Nice to meet you Bob!']
 
     assert conversation.query('What about age?') == ['How old are you?']
-    assert conversation.query('23') == ['Ok']
+    assert conversation.query('42') == ['Ok']
 
     assert conversation.query('Hello') == ['What is your name?']
     assert conversation.query('What about age?') == ['How old are you?']
@@ -102,14 +102,14 @@ def test_separation_of_agent_context_on_users(age_skill: Skill):
         return skills
 
     agent = Agent(skill_classifier=skill_classifier)
-    conversation_with_user_1 = agent.conversation_with_user('user_1')
-    conversation_with_user_2 = agent.conversation_with_user('user_2')
+    conversation_with_bob = agent.conversation_with_user('Bob')
+    conversation_with_alice = agent.conversation_with_user('Alice')
 
-    assert conversation_with_user_1.query('What about age?') == ['How old are you?']
-    assert conversation_with_user_2.query('What about age?') == ['How old are you?']
+    assert conversation_with_bob.query('What about age?') == ['How old are you?']
+    assert conversation_with_alice.query('What about age?') == ['How old are you?']
 
-    assert conversation_with_user_1.query('23') == ['Ok']
-    assert conversation_with_user_2.query('25') == ['Ok']
+    assert conversation_with_bob.query('42') == ['Ok']
+    assert conversation_with_alice.query('42') == ['Ok']
 
 
 def test_agent_query_without_conversation(age_skill: Skill):
@@ -123,5 +123,5 @@ def test_agent_query_without_conversation(age_skill: Skill):
 
     agent = Agent(skill_classifier=skill_classifier)
 
-    assert agent.query('What about age?', 'user_1') == ['How old are you?']
-    assert agent.query('23', 'user_1') == ['Ok']
+    assert agent.query('What about age?', 'Bob') == ['How old are you?']
+    assert agent.query('42', 'Bob') == ['Ok']

@@ -1,5 +1,8 @@
 language: python
 install:
+  - pip install coveralls pytest-cov
   - pip install .
 script:
-  - python -m pytest
+  - python -m pytest --cov=src tests/
+after_success:
+  - coveralls

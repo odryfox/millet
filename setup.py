@@ -1,18 +1,18 @@
 import io
+import re
 
 from setuptools import find_packages
 from setuptools import setup
 
-from src import dialogus
-
-
-with io.open("README.rst") as f:
+with io.open("README.rst", "rt", encoding="utf8") as f:
     readme = f.read()
 
+with io.open("src/dialogus/__init__.py", "rt", encoding="utf8") as f:
+    version = re.search(r'__version__ = "(.*?)"', f.read()).group(1)
 
 setup(
     name='Dialogus',
-    version=dialogus.__version__,
+    version=version,
     project_urls={
         "Code": "https://github.com/odryfox/dialogus",
         "Issue tracker": "https://github.com/odryfox/dialogus/issues",

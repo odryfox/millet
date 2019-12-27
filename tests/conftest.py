@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 
-from src.dialogus.agent import Skill
+from dialogus import Skill
 
 
 @pytest.fixture

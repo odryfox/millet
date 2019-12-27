@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 
-from src.dialogus.agent import Agent, Skill
+from dialogus import Agent, Skill
 
 
 def test_echo_agent():

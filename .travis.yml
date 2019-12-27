@@ -3,6 +3,6 @@ install:
   - pip install coveralls pytest-cov
   - pip install .
 script:
-  - python -m pytest --cov=src tests/
+  - pytest --cov=dialogus tests/
 after_success:
   - coveralls

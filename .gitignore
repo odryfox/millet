@@ -15,5 +15,6 @@ dist/
 build/
 *.egg
 *.egg-info/
+docs/_build/
 
 .coverage

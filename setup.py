@@ -28,6 +28,10 @@ setup(
     extras_require={
         "dev": [
             "pytest",
+            "sphinx",
+        ],
+        "docs": [
+            "sphinx",
         ],
     },
 )

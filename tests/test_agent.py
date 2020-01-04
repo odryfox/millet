@@ -148,3 +148,21 @@ def test_initial_message():
 
     conversation.query('Bob')
     assert conversation.query('Alex') == ['Your friend is Alex']
+
+
+def test_multi_answers():
+    class MoodSkill(Skill):
+        def run(self, message: str):
+            self.say('Hello')
+            self.say('Good day!')
+            mood = self.ask('How are you?')
+            ...
+
+    def skill_classifier(message: str) -> List[Skill]:
+        return [MoodSkill()]
+
+    agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user('Bob')
+
+    answers = conversation.query('Hello')
+    assert answers == ['Hello', 'Good day!', 'How are you?']

@@ -3,6 +3,9 @@ Dialogus
 
 A simple framework for building complex dialogue systems.
 
+.. image:: https://badge.fury.io/py/Dialogus.svg
+    :target: https://badge.fury.io/py/Dialogus
+
 .. image:: https://readthedocs.org/projects/dialogus/badge/?version=latest
     :target: https://dialogus.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status

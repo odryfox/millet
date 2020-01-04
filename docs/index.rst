@@ -11,6 +11,31 @@ Welcome to Dialogus's documentation!
    :caption: Contents:
 
 
+A Simple Example
+----------------
+
+.. code-block:: python
+
+    from typing import List
+    from dialogus import Agent, Skill
+
+    class MeetingSkill(Skill):
+        def run(self, message: str):
+            name = self.ask('What is your name?')
+            self.say(f'Nice to meet you {name}!')
+
+    def skill_classifier(message: str) -> List[Skill]:
+        return [MeetingSkill()]
+
+    agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user('Bob')
+
+.. code-block:: python
+
+    >>> conversation.query('Hello')
+    ['What is your name?']
+    >>> conversation.query('Bob')
+    ['Nice to meet you Bob!']
 
 Indices and tables
 ==================

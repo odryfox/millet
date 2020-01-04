@@ -125,3 +125,26 @@ def test_agent_query_without_conversation(age_skill: Skill):
 
     assert agent.query('What about age?', 'Bob') == ['How old are you?']
     assert agent.query('42', 'Bob') == ['Ok']
+
+
+def test_initial_message():
+    class FriendNamesSkill(Skill):
+        def run(self, message: str):
+            your_name = message
+            self.say(f'Your name is {your_name}')
+            friend_name = self.ask("Enter your friend's name")
+            self.say(f'Your friend is {friend_name}')
+
+    def skill_classifier(message: str) -> List[Skill]:
+        skills = []
+
+        if 'Bob' in message:
+            skills.append(FriendNamesSkill())
+
+        return skills
+
+    agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user('Bob')
+
+    conversation.query('Bob')
+    assert conversation.query('Alex') == ['Your friend is Alex']

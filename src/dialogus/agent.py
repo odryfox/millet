@@ -83,6 +83,8 @@ class Agent:
 
             if current_skill:
                 skills = [current_skill]
+        else:
+            user_context['initial_message'] = message
 
         answers = []
 
@@ -91,7 +93,8 @@ class Agent:
             skill = skills[i]
             skill.set_context(user_context)
             try:
-                skill.run(message)
+                initial_message = user_context.get('initial_message', message)
+                skill.run(initial_message)
                 user_context = dict()
                 i += 1
             except InputMessageSignal as ims:

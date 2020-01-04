@@ -7,8 +7,8 @@ from dialogus import Agent, Skill
 
 def test_echo_agent():
     class EchoSkill(Skill):
-        def run(self, message: str) -> List[str]:
-            return [message]
+        def run(self, message: str):
+            self.say(message)
 
     def skill_classifier(message: str) -> List[Skill]:
         return [EchoSkill()]
@@ -21,8 +21,8 @@ def test_echo_agent():
 
 def test_duplicate_agent():
     class DuplicateSkill(Skill):
-        def run(self, message: str) -> List[str]:
-            return [message * 2]
+        def run(self, message: str):
+            self.say(message * 2)
 
     def skill_classifier(message: str) -> List[Skill]:
         return [DuplicateSkill()]
@@ -40,12 +40,12 @@ def test_error_type_of_skill_classifier():
 
 def test_choice_of_skills():
     class GreetingSkill(Skill):
-        def run(self, message: str) -> List[str]:
-            return ['Hi']
+        def run(self, message: str):
+            self.say('Hi')
 
     class PartingSkill(Skill):
-        def run(self, message: str) -> List[str]:
-            return ['Bye']
+        def run(self, message: str):
+            self.say('Bye')
 
     def skill_classifier(message: str) -> List[Skill]:
         skills = []

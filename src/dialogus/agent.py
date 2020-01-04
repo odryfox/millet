@@ -1,10 +1,39 @@
 from abc import ABC, abstractmethod
-from typing import Callable, List
+from typing import Callable, List, Optional
+
+
+class InputMessageSignal(Exception):
+    def __init__(self, message: str, key: str) -> None:
+        self.message = message
+        self.key = key
+
+
+class OutputMessageSignal(Exception):
+    def __init__(self, message: str, key: str) -> None:
+        self.message = message
+        self.key = key
 
 
 class Skill(ABC):
-    def __init__(self):
-        self.state = 0
+    def __init__(self) -> None:
+        self.__context = dict()
+
+    def set_context(self, context: dict) -> None:
+        self.__context = context
+
+    def ask(self, message: str, key: Optional[str] = None) -> str:
+        key = key or message
+        answer = self.__context.get(key)
+        if answer:
+            return answer
+        raise InputMessageSignal(message, key)
+
+    def say(self, message: str, key: Optional[str] = None) -> None:
+        key = key or message
+        question = self.__context.get(key)
+        if question:
+            return
+        raise OutputMessageSignal(message, key)
 
     @abstractmethod
     def run(self, message: str) -> List[str]:
@@ -41,12 +70,15 @@ class Agent:
     def query(self, message: str, user_id: str) -> List[str]:
         user_context = self.__load_user_context(user_id)
 
-        current_skill_state = 0
         current_skill = None
+
+        waiting_key = user_context.get('waiting_key')
+        if waiting_key:
+            user_context[waiting_key] = message
+            user_context['waiting_key'] = None
 
         skills = self.__skill_classifier(message)
         if not skills:
-            current_skill_state = user_context['current_skill_state']
             current_skill = user_context['current_skill']
 
             if current_skill:
@@ -54,18 +86,23 @@ class Agent:
 
         answers = []
 
-        for skill in skills:
-            skill.state = current_skill_state
-            answers += skill.run(message)
-            current_skill_state = skill.state
-
-            if current_skill_state == 0:
-                current_skill = None
-            else:
+        i = 0
+        while i < len(skills):
+            skill = skills[i]
+            skill.set_context(user_context)
+            try:
+                skill.run(message)
+                user_context = dict()
+                i += 1
+            except InputMessageSignal as ims:
+                user_context['waiting_key'] = ims.key
+                answers.append(ims.message)
                 current_skill = skill
                 break
+            except OutputMessageSignal as oms:
+                user_context[oms.message] = oms.message
+                answers.append(oms.message)
 
-        user_context['current_skill_state'] = current_skill_state
         user_context['current_skill'] = current_skill
         self.__save_user_context(user_id, user_context)
 

@@ -1,21 +1,14 @@
-from typing import List
+from typing import List, Type
 
 from dialogus import Skill, Agent
 
 
-def test_initial_message():
-    class FriendNamesSkill(Skill):
-        def run(self, message: str):
-            your_name = message
-            self.say(f'Your name is {your_name}')
-            friend_name = self.ask("Enter your friend's name")
-            self.say(f'Your friend is {friend_name}')
-
-    def skill_classifier(message: str) -> List[Skill]:
+def test_initial_message(friend_name_skill: Type[Skill]):
+    def skill_classifier(message: str) -> List[Type[Skill]]:
         skills = []
 
         if 'Bob' in message:
-            skills.append(FriendNamesSkill())
+            skills.append(friend_name_skill)
 
         return skills
 
@@ -26,16 +19,9 @@ def test_initial_message():
     assert conversation.query('Alex') == ['Your friend is Alex']
 
 
-def test_multi_answers():
-    class MoodSkill(Skill):
-        def run(self, message: str):
-            self.say('Hello')
-            self.say('Good day!')
-            mood = self.ask('How are you?')
-            ...
-
-    def skill_classifier(message: str) -> List[Skill]:
-        return [MoodSkill()]
+def test_multi_answers(mood_skill_class: Type[Skill]):
+    def skill_classifier(message: str) -> List[Type[Skill]]:
+        return [mood_skill_class]
 
     agent = Agent(skill_classifier=skill_classifier)
     conversation = agent.conversation_with_user('Bob')

@@ -15,10 +15,7 @@ class OutputMessageSignal(Exception):
 
 
 class Skill(ABC):
-    def __init__(self) -> None:
-        self.__context = dict()
-
-    def set_context(self, context: dict) -> None:
+    def __init__(self, context: dict) -> None:
         self.__context = context
 
     def ask(self, message: str, key: Optional[str] = None) -> str:

@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Type
 
 import pytest
 
 from dialogus import Agent, Skill
+from dialogus.context import RAMAgentContext
 
 
 def test_echo_agent():
@@ -10,8 +11,8 @@ def test_echo_agent():
         def run(self, message: str):
             self.say(message)
 
-    def skill_classifier(message: str) -> List[Skill]:
-        return [EchoSkill()]
+    def skill_classifier(message: str) -> List[Type[Skill]]:
+        return [EchoSkill]
 
     agent = Agent(skill_classifier=skill_classifier)
     conversation = agent.conversation_with_user('Bob')
@@ -24,8 +25,8 @@ def test_duplicate_agent():
         def run(self, message: str):
             self.say(message * 2)
 
-    def skill_classifier(message: str) -> List[Skill]:
-        return [DuplicateSkill()]
+    def skill_classifier(message: str) -> List[Type[Skill]]:
+        return [DuplicateSkill]
 
     agent = Agent(skill_classifier=skill_classifier)
     conversation = agent.conversation_with_user('Bob')
@@ -47,14 +48,14 @@ def test_choice_of_skills():
         def run(self, message: str):
             self.say('Bye')
 
-    def skill_classifier(message: str) -> List[Skill]:
+    def skill_classifier(message: str) -> List[Type[Skill]]:
         skills = []
 
         if 'Hello' in message:
-            skills.append(GreetingSkill())
+            skills.append(GreetingSkill)
 
         if 'Goodbye' in message:
-            skills.append(PartingSkill())
+            skills.append(PartingSkill)
 
         return skills
 
@@ -67,15 +68,15 @@ def test_choice_of_skills():
     assert conversation.query('How are you?') == []
 
 
-def test_continuous_skill(meeting_skill: Skill, age_skill: Skill):
-    def skill_classifier(message: str) -> List[Skill]:
+def test_continuous_skill(meeting_skill_class: Type[Skill], age_skill_class: Type[Skill]):
+    def skill_classifier(message: str) -> List[Type[Skill]]:
         skills = []
 
         if 'Hello' in message:
-            skills.append(meeting_skill)
+            skills.append(meeting_skill_class)
 
         if 'age' in message:
-            skills.append(age_skill)
+            skills.append(age_skill_class)
 
         return skills
 
@@ -88,16 +89,13 @@ def test_continuous_skill(meeting_skill: Skill, age_skill: Skill):
     assert conversation.query('What about age?') == ['How old are you?']
     assert conversation.query('42') == ['Ok']
 
-    assert conversation.query('Hello') == ['What is your name?']
-    assert conversation.query('What about age?') == ['How old are you?']
 
-
-def test_separation_context_on_users(age_skill: Skill):
-    def skill_classifier(message: str) -> List[Skill]:
+def test_separation_context_on_users(age_skill_class: Type[Skill]):
+    def skill_classifier(message: str) -> List[Type[Skill]]:
         skills = []
 
         if 'age' in message:
-            skills.append(age_skill)
+            skills.append(age_skill_class)
 
         return skills
 
@@ -112,12 +110,12 @@ def test_separation_context_on_users(age_skill: Skill):
     assert conversation_with_alice.query('42') == ['Ok']
 
 
-def test_query_without_conversation(age_skill: Skill):
-    def skill_classifier(message: str) -> List[Skill]:
+def test_query_without_conversation(age_skill_class: Type[Skill]):
+    def skill_classifier(message: str) -> List[Type[Skill]]:
         skills = []
 
         if 'age' in message:
-            skills.append(age_skill)
+            skills.append(age_skill_class)
 
         return skills
 
@@ -125,3 +123,8 @@ def test_query_without_conversation(age_skill: Skill):
 
     assert agent.query('What about age?', 'Bob') == ['How old are you?']
     assert agent.query('42', 'Bob') == ['Ok']
+
+
+def test_default_context():
+    agent = Agent(skill_classifier=lambda message: [])
+    assert isinstance(agent.context, RAMAgentContext)

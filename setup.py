@@ -29,6 +29,7 @@ setup(
         "dev": [
             "pytest",
             "sphinx",
+            "redis",
         ],
         "docs": [
             "sphinx",

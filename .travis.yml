@@ -1,8 +1,11 @@
 language: python
 install:
   - pip install coveralls pytest-cov
+  - pip install redis
   - pip install .
 script:
   - pytest --cov=dialogus
+services:
+  - redis-server
 after_success:
   - coveralls

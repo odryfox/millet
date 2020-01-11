@@ -5,7 +5,7 @@ from dialogus.skill import Skill, OutputMessageSignal, InputMessageSignal
 
 
 class Conversation:
-    def __init__(self, agent: 'Agent', user_id: str):
+    def __init__(self, agent: "Agent", user_id: str):
         self.agent = agent
         self.user_id = user_id
 
@@ -16,7 +16,7 @@ class Conversation:
 class Agent:
     def __init__(self, skill_classifier: Callable[[str], List[Type[Skill]]], context: Optional[AgentContext] = None):
         if not callable(skill_classifier):
-            raise TypeError('skill_classifier must be a function')
+            raise TypeError("skill_classifier must be a function")
 
         if not context:
             context = RAMAgentContext()
@@ -32,15 +32,15 @@ class Agent:
 
         if not user_context.dialogs:
             skill_classes = self.__skill_classifier(message)
-            user_context.dialogs = [DialogContext(skill_class=skill_class, params={'initial_message': message}) for skill_class in skill_classes]
+            user_context.dialogs = [DialogContext(skill_class=skill_class, params={"initial_message": message}) for skill_class in skill_classes]
 
         dialogs = user_context.dialogs
 
         if dialogs:
-            waiting_key = dialogs[0].params.get('waiting_key')
+            waiting_key = dialogs[0].params.get("waiting_key")
             if waiting_key:
                 dialogs[0].params[waiting_key] = message
-                dialogs[0].params['waiting_key'] = None
+                dialogs[0].params["waiting_key"] = None
 
         answers = []
 
@@ -49,7 +49,7 @@ class Agent:
             dialog = dialogs[i]
             skill = dialog.skill_class(global_context=user_context.params, skill_context=dialog.params)
             try:
-                initial_message = dialog.params['initial_message']
+                initial_message = dialog.params["initial_message"]
                 skill.run(initial_message)
                 user_context = UserContext(dialogs=[], params=user_context.params)
                 i += 1
@@ -61,7 +61,7 @@ class Agent:
                         self.context.set_user_context(user_id, user_context)
                         return self.query(message, user_id)
 
-                dialog.params['waiting_key'] = ims.key
+                dialog.params["waiting_key"] = ims.key
                 answers.append(ims.message)
                 break
             except OutputMessageSignal as oms:

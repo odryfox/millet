@@ -11,7 +11,7 @@ with io.open("src/dialogus/__init__.py", "rt", encoding="utf8") as f:
     version = re.search(r'__version__ = "(.*?)"', f.read()).group(1)
 
 setup(
-    name='Dialogus',
+    name="Dialogus",
     version=version,
     project_urls={
         "Code": "https://github.com/odryfox/dialogus",

@@ -1,11 +1,10 @@
 import pickle
 from abc import ABC, abstractmethod
-from typing import Type, List, Any, TypeVar
+from typing import Type, List, Any
+
+from redis import Redis
 
 from dialogus.skill import Skill
-
-
-Redis = TypeVar('Redis')
 
 
 class DialogContext:

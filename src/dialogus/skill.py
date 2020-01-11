@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from typing import Optional, List
+from typing import Optional
 
 
 class InputMessageSignal(Exception):
@@ -33,5 +33,5 @@ class Skill(ABC):
         raise OutputMessageSignal(message, key)
 
     @abstractmethod
-    def run(self, message: str) -> List[str]:
+    def run(self, message: str) -> None:
         pass

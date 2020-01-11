@@ -3,9 +3,10 @@ from typing import Optional
 
 
 class InputMessageSignal(Exception):
-    def __init__(self, message: str, key: str) -> None:
+    def __init__(self, message: str, key: str, is_should_reweigh_skills: bool = False) -> None:
         self.message = message
         self.key = key
+        self.is_should_reweigh_skills = is_should_reweigh_skills
 
 
 class OutputMessageSignal(Exception):
@@ -25,6 +26,9 @@ class Skill(ABC):
         if answer:
             return answer
         raise InputMessageSignal(message, key)
+
+    def specify(self, message: str, key: str) -> None:
+        raise InputMessageSignal(message, key, True)
 
     def say(self, message: str, key: Optional[str] = None) -> None:
         key = key or message

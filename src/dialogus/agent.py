@@ -54,6 +54,13 @@ class Agent:
                 user_context = UserContext(dialogs=[], params=user_context.params)
                 i += 1
             except InputMessageSignal as ims:
+                if ims.is_should_reweigh_skills:
+                    skill_classes = self.__skill_classifier(message)
+                    if skill_classes:
+                        user_context.dialogs = []
+                        self.context.set_user_context(user_id, user_context)
+                        return self.query(message, user_id)
+
                 dialog.params['waiting_key'] = ims.key
                 answers.append(ims.message)
                 break

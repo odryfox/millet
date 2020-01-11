@@ -65,3 +65,13 @@ def test_already_asked_with_custom_key(bob_id: str, meeting_skill_class: Type[Sk
     meeting_skill = meeting_skill_class(global_context={}, skill_context={"name_key": "Bob"})
 
     assert meeting_skill.ask("What's your name?", "name_key") == "Bob"
+
+
+def test_specify(bob_id: str, age_skill_class: Type[Skill]):
+    age_skill = age_skill_class(global_context={}, skill_context={"What's your name?": "Forty two"})
+
+    try:
+        age_skill.specify("Incorrect age: expected number, repeat pls", "What's your name?")
+        assert False, f"Expected {InputMessageSignal.__name__}"
+    except InputMessageSignal as ims:
+        assert ims.message == "Incorrect age: expected number, repeat pls" and ims.key == "What's your name?" and ims.is_should_reweigh_skills

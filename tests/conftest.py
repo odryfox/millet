@@ -20,12 +20,12 @@ def alice_id():
 
 @pytest.fixture
 def meeting_skill_class() -> Type[Skill]:
-    class _MeetingSkill(Skill):
+    class MeetingSkill(Skill):
         def run(self, message: str):
             name = self.ask("What is your name?")
             self.say(f"Nice to meet you {name}!")
 
-    return _MeetingSkill
+    return MeetingSkill
 
 
 @pytest.fixture
@@ -46,7 +46,10 @@ def meeting_agent(meeting_skill_class: Type[Skill]) -> Agent:
 class AgeSkill(Skill):
     def run(self, message: str):
         age = self.ask("How old are you?")
-        ...
+        try:
+            age = int(age)
+        except:
+            self.specify("Incorrect age: expected number, repeat pls", "How old are you?")
         self.say("Ok")
 
 

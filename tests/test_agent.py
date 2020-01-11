@@ -239,3 +239,22 @@ def test_move_to_new_skill_when_specify(bob_id: str, age_skill_class: Type[Skill
 
     assert conversation.query("What about age?") == ["How old are you?"]
     assert conversation.query("Hello") == ["What is your name?"]
+
+
+def test_do_not_move_to_new_skill_when_not_specify(bob_id: str, age_skill_class: Type[Skill], meeting_skill_class: Type[Skill]):
+    def skill_classifier(message: str) -> List[Type[Skill]]:
+        skills = []
+
+        if "age" in message:
+            skills.append(age_skill_class)
+
+        if "Hello" in message:
+            skills.append(meeting_skill_class)
+
+        return skills
+
+    agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user(bob_id)
+
+    assert conversation.query("Hello") == ["What is your name?"]
+    assert conversation.query("What about age?") == ["Nice to meet you What about age?!"]

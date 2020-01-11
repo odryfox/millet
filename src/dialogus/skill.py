@@ -15,19 +15,20 @@ class OutputMessageSignal(Exception):
 
 
 class Skill(ABC):
-    def __init__(self, context: dict) -> None:
-        self.__context = context
+    def __init__(self, *, global_context: dict, skill_context: dict) -> None:
+        self.global_context = global_context
+        self.__skill_context = skill_context
 
     def ask(self, message: str, key: Optional[str] = None) -> str:
         key = key or message
-        answer = self.__context.get(key)
+        answer = self.__skill_context.get(key)
         if answer:
             return answer
         raise InputMessageSignal(message, key)
 
     def say(self, message: str, key: Optional[str] = None) -> None:
         key = key or message
-        question = self.__context.get(key)
+        question = self.__skill_context.get(key)
         if question:
             return
         raise OutputMessageSignal(message, key)

@@ -177,3 +177,29 @@ def test_default_context():
     agent = Agent(skill_classifier=lambda message: [])
 
     assert isinstance(agent.context, RAMAgentContext)
+
+
+def test_global_context_change_in_skill(bob_id: str):
+    class AgeSkill(Skill):
+        def run(self, message: str):
+            age = self.global_context.get("age")
+            if not age:
+                age = self.ask("How old are you?")
+                self.global_context["age"] = age
+
+            self.say(f"You are {age} years old")
+
+    def skill_classifier(message: str) -> List[Type[Skill]]:
+        skills = []
+
+        if "age" in message:
+            skills.append(AgeSkill)
+
+        return skills
+
+    agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user(bob_id)
+
+    assert conversation.query("What about age?") == ["How old are you?"]
+    assert conversation.query("42") == ["You are 42 years old"]
+    assert conversation.query("What about age") == ["You are 42 years old"]

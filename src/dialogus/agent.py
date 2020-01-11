@@ -47,11 +47,11 @@ class Agent:
         i = 0
         while i < len(dialogs):
             dialog = dialogs[i]
-            skill = dialog.skill_class(dialog.params)
+            skill = dialog.skill_class(global_context=user_context.params, skill_context=dialog.params)
             try:
                 initial_message = dialog.params['initial_message']
                 skill.run(initial_message)
-                user_context = UserContext(dialogs=[], params={})
+                user_context = UserContext(dialogs=[], params=user_context.params)
                 i += 1
             except InputMessageSignal as ims:
                 dialog.params['waiting_key'] = ims.key

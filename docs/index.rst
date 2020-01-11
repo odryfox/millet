@@ -16,7 +16,7 @@ A Simple Example
 
 .. code-block:: python
 
-    from typing import List
+    from typing import List, Type
     from dialogus import Agent, Skill
 
     class MeetingSkill(Skill):
@@ -24,8 +24,8 @@ A Simple Example
             name = self.ask("What is your name?")
             self.say(f"Nice to meet you {name}!")
 
-    def skill_classifier(message: str) -> List[Skill]:
-        return [MeetingSkill()]
+    def skill_classifier(message: str) -> List[Type[Skill]]:
+        return [MeetingSkill]
 
     agent = Agent(skill_classifier=skill_classifier)
     conversation = agent.conversation_with_user("Bob")

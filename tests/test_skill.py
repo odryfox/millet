@@ -1,6 +1,7 @@
 from typing import Type
 
-from dialogus.skill import InputMessageSignal, OutputMessageSignal, Skill
+from dialogus.skill import InputMessageSignal, OutputMessageSignal, Skill, \
+    get_or_call
 
 
 def test_say(bob_id: str, meeting_skill_class: Type[Skill]):
@@ -75,3 +76,42 @@ def test_specify(bob_id: str, age_skill_class: Type[Skill]):
         assert False, f"Expected {InputMessageSignal.__name__}"
     except InputMessageSignal as ims:
         assert ims.message == "Incorrect age: expected number, repeat pls" and ims.key == "What's your name?" and ims.is_should_reweigh_skills
+
+
+def test_get_or_call():
+    class OrderSkill(Skill):
+        number_of_orders = 0
+
+        def run(self, message: str):
+            return self.get_or_call(self.order, 1)
+
+        def order(self, product_id: int) -> int:
+            self.number_of_orders += 1
+            return 123
+
+    order_skill = OrderSkill(global_context={}, skill_context={})
+    assert order_skill.number_of_orders == 0
+    assert order_skill.run("order pls") == 123
+    assert order_skill.number_of_orders == 1
+    assert order_skill.run("order pls") == 123
+    assert order_skill.number_of_orders == 1
+
+
+def test_get_or_call_decorator():
+    class OrderSkill(Skill):
+        number_of_orders = 0
+
+        def run(self, message: str):
+            return self.order(1)
+
+        @get_or_call
+        def order(self, product_id: int) -> int:
+            self.number_of_orders += 1
+            return 123
+
+    order_skill = OrderSkill(global_context={}, skill_context={})
+    assert order_skill.number_of_orders == 0
+    assert order_skill.run("order pls") == 123
+    assert order_skill.number_of_orders == 1
+    assert order_skill.run("order pls") == 123
+    assert order_skill.number_of_orders == 1

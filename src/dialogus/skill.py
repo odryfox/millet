@@ -1,5 +1,5 @@
 from abc import abstractmethod, ABC
-from typing import Optional
+from typing import Optional, Callable, Any
 
 
 class InputMessageSignal(Exception):
@@ -37,6 +37,25 @@ class Skill(ABC):
             return
         raise OutputMessageSignal(message, key)
 
+    def get_or_call(self, function: Callable, *args, **kwargs) -> Any:
+        key = f"{function.__name__}{args}{kwargs}"
+        result = self.__skill_context.get(key)
+        if result:
+            return result
+        result = function(*args, **kwargs)
+        self.__skill_context[key] = result
+        return result
+
     @abstractmethod
     def run(self, message: str) -> None:
         pass
+
+
+def get_or_call(method: Callable) -> Callable:
+    from functools import wraps
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        return self.get_or_call(method, *((self, ) + args), **kwargs)
+
+    return wrapper

@@ -1,12 +1,13 @@
 from typing import List, Type
 
 import pytest
+from redis import Redis
 
 from dialogus import Agent, Skill
-from dialogus.context import RAMAgentContext
+from dialogus.context import RAMAgentContext, RedisAgentContext
 
 
-def test_echo_agent():
+def test_answer_agent(bob_id: str):
     class EchoSkill(Skill):
         def run(self, message: str):
             self.say(message)
@@ -15,116 +16,164 @@ def test_echo_agent():
         return [EchoSkill]
 
     agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user('Bob')
+    conversation = agent.conversation_with_user(bob_id)
 
-    assert conversation.query('Hello') == ['Hello']
-
-
-def test_duplicate_agent():
-    class DuplicateSkill(Skill):
-        def run(self, message: str):
-            self.say(message * 2)
-
-    def skill_classifier(message: str) -> List[Type[Skill]]:
-        return [DuplicateSkill]
-
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user('Bob')
-
-    assert conversation.query('Hello') == ['HelloHello']
+    assert conversation.query("Hello") == ["Hello"]
 
 
-def test_error_type_of_skill_classifier():
+def test_incorrect_skill_classifier():
     with pytest.raises(TypeError):
         Agent(skill_classifier=None)
 
 
-def test_choice_of_skills():
+def test_choice_of_skills(bob_id: str):
     class GreetingSkill(Skill):
         def run(self, message: str):
-            self.say('Hi')
+            self.say("Hi")
 
     class PartingSkill(Skill):
         def run(self, message: str):
-            self.say('Bye')
+            self.say("Bye")
 
     def skill_classifier(message: str) -> List[Type[Skill]]:
         skills = []
 
-        if 'Hello' in message:
+        if "Hello" in message:
             skills.append(GreetingSkill)
 
-        if 'Goodbye' in message:
+        if "Goodbye" in message:
             skills.append(PartingSkill)
 
         return skills
 
     agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user('Bob')
+    conversation = agent.conversation_with_user(bob_id)
 
-    assert conversation.query('Hello') == ['Hi']
-    assert conversation.query('Goodbye') == ['Bye']
-    assert conversation.query('Hello. Goodbye.') == ['Hi', 'Bye']
-    assert conversation.query('How are you?') == []
+    assert conversation.query("Hello") == ["Hi"]
+    assert conversation.query("Goodbye") == ["Bye"]
+    assert conversation.query("How are you?") == []
 
 
-def test_continuous_skill(meeting_skill_class: Type[Skill], age_skill_class: Type[Skill]):
+def test_choice_of_many_skills(bob_id: str):
+    class GreetingSkill(Skill):
+        def run(self, message: str):
+            self.say("Hello")
+
+    class IntroduceYourselfSkill(Skill):
+        def run(self, message: str):
+            self.say("It's me")
+
+    def skill_classifier(message: str) -> List[Type[Skill]]:
+        skills = [GreetingSkill, IntroduceYourselfSkill]
+        return skills
+
+    agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user(bob_id)
+
+    assert conversation.query("Hello") == ["Hello", "It's me"]
+
+
+def test_separation_context_on_users(bob_id: str, alice_id: str, meeting_agent: Agent):
+    conversation_with_bob = meeting_agent.conversation_with_user(bob_id)
+    conversation_with_alice = meeting_agent.conversation_with_user(alice_id)
+
+    assert conversation_with_bob.query("Hello") == ["What is your name?"]
+    assert conversation_with_alice.query("Hello") == ["What is your name?"]
+
+    assert conversation_with_bob.query("Bob") == ["Nice to meet you Bob!"]
+    assert conversation_with_alice.query("Alice") == ["Nice to meet you Alice!"]
+
+
+def test_query_without_conversation(bob_id: str, meeting_agent: Agent):
+    assert meeting_agent.query("Hello", bob_id) == ["What is your name?"]
+    assert meeting_agent.query("Bob", bob_id) == ["Nice to meet you Bob!"]
+
+
+def test_initial_message(bob_id: str):
+    class FriendNamesSkill(Skill):
+        def run(self, message: str):
+            your_name = message
+            self.say(f"Your name is {your_name}")
+            friend_name = self.ask("Enter your friend's name")
+            self.say(f"Your friend is {friend_name}")
+
     def skill_classifier(message: str) -> List[Type[Skill]]:
         skills = []
 
-        if 'Hello' in message:
+        if "Bob" in message:
+            skills.append(FriendNamesSkill)
+
+        return skills
+
+    agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user(bob_id)
+    conversation.query("Bob")
+
+    assert conversation.query("Alice") == ["Your friend is Alice"]
+
+
+def test_multi_answers(bob_id: str):
+    class MoodSkill(Skill):
+        def run(self, message: str):
+            self.say("Hello")
+            self.say("Good day!")
+            mood = self.ask("How are you?")
+            ...
+            self.say("Goodbye")
+
+    def skill_classifier(message: str) -> List[Type[Skill]]:
+        return [MoodSkill]
+
+    agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user(bob_id)
+
+    assert conversation.query("Hello") == ["Hello", "Good day!", "How are you?"]
+
+
+def test_continuous_conversation(bob_id: str, meeting_agent: Agent):
+    conversation = meeting_agent.conversation_with_user(bob_id)
+
+    assert conversation.query("Hello") == ["What is your name?"]
+    assert conversation.query("Bob") == ["Nice to meet you Bob!"]
+
+
+def test_ram_persistent_continuous_conversation(bob_id: str, meeting_skill_class: Agent):
+    def skill_classifier(message: str) -> List[Type[Skill]]:
+        skills = []
+
+        if "Hello" in message:
             skills.append(meeting_skill_class)
 
-        if 'age' in message:
-            skills.append(age_skill_class)
-
         return skills
 
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user('Bob')
+    agent = Agent(skill_classifier=skill_classifier, context=RAMAgentContext())
+    conversation = agent.conversation_with_user(bob_id)
+    assert conversation.query("Hello") == ["What is your name?"]
 
-    assert conversation.query('Hello') == ['What is your name?']
-    assert conversation.query('Bob') == ['Nice to meet you Bob!']
-
-    assert conversation.query('What about age?') == ['How old are you?']
-    assert conversation.query('42') == ['Ok']
+    agent = Agent(skill_classifier=skill_classifier, context=RAMAgentContext())
+    conversation = agent.conversation_with_user(bob_id)
+    assert conversation.query("Bob") == []
 
 
-def test_separation_context_on_users(age_skill_class: Type[Skill]):
+def test_redis_persistent_continuous_conversation(bob_id: str, redis: Redis, age_skill_class: Type[Skill]):
     def skill_classifier(message: str) -> List[Type[Skill]]:
         skills = []
 
-        if 'age' in message:
+        if "age" in message:
             skills.append(age_skill_class)
 
         return skills
 
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation_with_bob = agent.conversation_with_user('Bob')
-    conversation_with_alice = agent.conversation_with_user('Alice')
+    agent = Agent(skill_classifier=skill_classifier, context=RedisAgentContext(redis=redis))
+    conversation = agent.conversation_with_user(bob_id)
+    assert conversation.query("What about age?") == ["How old are you?"]
 
-    assert conversation_with_bob.query('What about age?') == ['How old are you?']
-    assert conversation_with_alice.query('What about age?') == ['How old are you?']
-
-    assert conversation_with_bob.query('42') == ['Ok']
-    assert conversation_with_alice.query('42') == ['Ok']
-
-
-def test_query_without_conversation(age_skill_class: Type[Skill]):
-    def skill_classifier(message: str) -> List[Type[Skill]]:
-        skills = []
-
-        if 'age' in message:
-            skills.append(age_skill_class)
-
-        return skills
-
-    agent = Agent(skill_classifier=skill_classifier)
-
-    assert agent.query('What about age?', 'Bob') == ['How old are you?']
-    assert agent.query('42', 'Bob') == ['Ok']
+    agent = Agent(skill_classifier=skill_classifier, context=RedisAgentContext(redis=redis))
+    conversation = agent.conversation_with_user(bob_id)
+    assert conversation.query("42") == ["Ok"]
 
 
 def test_default_context():
     agent = Agent(skill_classifier=lambda message: [])
+
     assert isinstance(agent.context, RAMAgentContext)

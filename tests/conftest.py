@@ -1,56 +1,61 @@
+from typing import List, Type
+
 import pytest
 
 from redis import Redis
 
-from dialogus import Skill
+from dialogus import Skill, Agent
 from dialogus.context import DialogContext, UserContext
 
 
 @pytest.fixture
-def age_skill_class():
-    class AgeSkill(Skill):
-        def run(self, message: str):
-            age = self.ask('How old are you?')
-            self.say('Ok')
+def bob_id():
+    return "Bob"
 
+
+@pytest.fixture
+def alice_id():
+    return "Alice"
+
+
+@pytest.fixture
+def meeting_skill_class() -> Type[Skill]:
+    class _MeetingSkill(Skill):
+        def run(self, message: str):
+            name = self.ask("What is your name?")
+            self.say(f"Nice to meet you {name}!")
+
+    return _MeetingSkill
+
+
+@pytest.fixture
+def meeting_agent(meeting_skill_class: Type[Skill]) -> Agent:
+    def skill_classifier(message: str) -> List[Type[Skill]]:
+        skills = []
+
+        if "Hello" in message:
+            skills.append(meeting_skill_class)
+
+        return skills
+
+    agent = Agent(skill_classifier=skill_classifier)
+    return agent
+
+
+# pickle serializer requires global class for serialize/deserialize
+class AgeSkill(Skill):
+    def run(self, message: str):
+        age = self.ask("How old are you?")
+        ...
+        self.say("Ok")
+
+
+@pytest.fixture
+def age_skill_class():
     return AgeSkill
 
 
 @pytest.fixture
-def meeting_skill_class():
-    class MeetingSkill(Skill):
-        def run(self, message: str):
-            name = self.ask('What is your name?')
-            self.say(f'Nice to meet you {name}!')
-
-    return MeetingSkill
-
-
-@pytest.fixture
-def mood_skill_class():
-    class MoodSkill(Skill):
-        def run(self, message: str):
-            self.say('Hello')
-            self.say('Good day!')
-            mood = self.ask('How are you?')
-            ...
-
-    return MoodSkill
-
-
-@pytest.fixture
-def friend_name_skill():
-    class FriendNamesSkill(Skill):
-        def run(self, message: str):
-            your_name = message
-            self.say(f'Your name is {your_name}')
-            friend_name = self.ask("Enter your friend's name")
-            self.say(f'Your friend is {friend_name}')
-
-    return FriendNamesSkill
-
-
-@pytest.fixture()
 def redis():
     redis = Redis()
     redis.flushdb()
@@ -58,21 +63,17 @@ def redis():
     redis.flushdb()
 
 
-class EmptySkill(Skill):
-    def run(self, message: str):
-        pass
-
-
-@pytest.fixture()
+@pytest.fixture
 def user_context():
     global_params = {
         "name": "Bob",
+        "age": 42,
     }
 
     skill_params = {
-        "test": "123",
+        "How old are you?": 42,
     }
 
-    dialogs = [DialogContext(skill_class=EmptySkill, params=skill_params)]
+    dialogs = [DialogContext(skill_class=AgeSkill, params=skill_params)]
 
     return UserContext(params=global_params, dialogs=dialogs)

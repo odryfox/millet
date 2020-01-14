@@ -9,8 +9,8 @@ from dialogus.context import RAMAgentContext, RedisAgentContext
 
 def test_answer_agent(bob_id: str):
     class EchoSkill(Skill):
-        def run(self, message: str):
-            self.say(message)
+        def start(self, initial_message: str):
+            self.say(initial_message)
 
     def skill_classifier(message: str) -> List[Type[Skill]]:
         return [EchoSkill]
@@ -28,11 +28,11 @@ def test_incorrect_skill_classifier():
 
 def test_choice_of_skills(bob_id: str):
     class GreetingSkill(Skill):
-        def run(self, message: str):
+        def start(self, initial_message: str):
             self.say("Hi")
 
     class PartingSkill(Skill):
-        def run(self, message: str):
+        def start(self, initial_message: str):
             self.say("Bye")
 
     def skill_classifier(message: str) -> List[Type[Skill]]:
@@ -56,11 +56,11 @@ def test_choice_of_skills(bob_id: str):
 
 def test_choice_of_many_skills(bob_id: str):
     class GreetingSkill(Skill):
-        def run(self, message: str):
+        def start(self, initial_message: str):
             self.say("Hello")
 
     class IntroduceYourselfSkill(Skill):
-        def run(self, message: str):
+        def start(self, initial_message: str):
             self.say("It's me")
 
     def skill_classifier(message: str) -> List[Type[Skill]]:
@@ -89,36 +89,14 @@ def test_query_without_conversation(bob_id: str, meeting_agent: Agent):
     assert meeting_agent.query("Bob", bob_id) == ["Nice to meet you Bob!"]
 
 
-def test_initial_message(bob_id: str):
-    class FriendNamesSkill(Skill):
-        def run(self, message: str):
-            your_name = message
-            self.say(f"Your name is {your_name}")
-            friend_name = self.ask("Enter your friend's name")
-            self.say(f"Your friend is {friend_name}")
-
-    def skill_classifier(message: str) -> List[Type[Skill]]:
-        skills = []
-
-        if "Bob" in message:
-            skills.append(FriendNamesSkill)
-
-        return skills
-
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
-    conversation.query("Bob")
-
-    assert conversation.query("Alice") == ["Your friend is Alice"]
-
-
 def test_multi_answers(bob_id: str):
     class MoodSkill(Skill):
-        def run(self, message: str):
+        def start(self, initial_message: str):
             self.say("Hello")
             self.say("Good day!")
-            mood = self.ask("How are you?")
-            ...
+            self.ask("How are you?", direct_to=self.waiting_mood)
+
+        def waiting_mood(self, mood: str):
             self.say("Goodbye")
 
     def skill_classifier(message: str) -> List[Type[Skill]]:
@@ -181,12 +159,14 @@ def test_default_context():
 
 def test_global_context_change_in_skill(bob_id: str):
     class AgeSkill(Skill):
-        def run(self, message: str):
+        def start(self, initial_message: str):
             age = self.global_context.get("age")
             if not age:
-                age = self.ask("How old are you?")
-                self.global_context["age"] = age
+                self.ask("How old are you?", direct_to=self.waiting_age)
+            self.say(f"You are {age} years old")
 
+        def waiting_age(self, age: str):
+            self.global_context["age"] = age
             self.say(f"You are {age} years old")
 
     def skill_classifier(message: str) -> List[Type[Skill]]:

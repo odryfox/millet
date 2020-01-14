@@ -1,7 +1,7 @@
 from typing import Callable, List, Type, Optional
 
 from dialogus.context import AgentContext, UserContext, DialogContext, RAMAgentContext
-from dialogus.skill import Skill, OutputMessageSignal, InputMessageSignal
+from dialogus.skill import Skill, InputMessageSignal
 
 
 class Conversation:
@@ -36,23 +36,16 @@ class Agent:
 
         dialogs = user_context.dialogs
 
-        if dialogs:
-            waiting_key = dialogs[0].params.get("waiting_key")
-            if waiting_key:
-                dialogs[0].params[waiting_key] = message
-                dialogs[0].params["waiting_key"] = None
-
         answers = []
 
-        i = 0
-        while i < len(dialogs):
-            dialog = dialogs[i]
+        for dialog in dialogs:
             skill = dialog.skill_class(global_context=user_context.params, skill_context=dialog.params)
+            state_name = dialog.params.get("next_state_name", "start")
+            state = getattr(skill, state_name)
             try:
-                initial_message = dialog.params["initial_message"]
-                skill.run(initial_message)
+                state(message)
+                answers += skill.answers
                 user_context = UserContext(dialogs=[], params=user_context.params)
-                i += 1
             except InputMessageSignal as ims:
                 if ims.is_should_reweigh_skills:
                     skill_classes = self.__skill_classifier(message)
@@ -61,12 +54,9 @@ class Agent:
                         self.context.set_user_context(user_id, user_context)
                         return self.query(message, user_id)
 
-                dialog.params["waiting_key"] = ims.key
-                answers.append(ims.message)
+                dialog.params["next_state_name"] = ims.direct_to.__name__
+                answers += skill.answers
                 break
-            except OutputMessageSignal as oms:
-                dialog.params[oms.message] = oms.message
-                answers.append(oms.message)
 
         self.context.set_user_context(user_id, user_context)
 

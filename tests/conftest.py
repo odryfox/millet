@@ -21,8 +21,10 @@ def alice_id():
 @pytest.fixture
 def meeting_skill_class() -> Type[Skill]:
     class MeetingSkill(Skill):
-        def run(self, message: str):
-            name = self.ask("What is your name?")
+        def start(self, initial_message: str):
+            self.ask(question="What is your name?", direct_to=self.waiting_name)
+
+        def waiting_name(self, name: str):
             self.say(f"Nice to meet you {name}!")
 
     return MeetingSkill
@@ -44,13 +46,15 @@ def meeting_agent(meeting_skill_class: Type[Skill]) -> Agent:
 
 # pickle serializer requires global class for serialize/deserialize
 class AgeSkill(Skill):
-    def run(self, message: str):
-        age = self.ask("How old are you?")
+    def start(self, initial_message: str):
+        self.ask("How old are you?", direct_to=self.waiting_age)
+
+    def waiting_age(self, age: str):
         try:
             age = int(age)
+            self.say("Ok")
         except:
-            self.specify("Incorrect age: expected number, repeat pls", "How old are you?")
-        self.say("Ok")
+            self.specify("Incorrect age: expected number, repeat pls", direct_to=self.waiting_age)
 
 
 @pytest.fixture

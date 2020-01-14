@@ -1,61 +1,31 @@
 from abc import abstractmethod, ABC
-from typing import Optional, Callable, Any
+from typing import Callable
 
 
 class InputMessageSignal(Exception):
-    def __init__(self, message: str, key: str, is_should_reweigh_skills: bool = False) -> None:
+    def __init__(self, message: str, direct_to: Callable, is_should_reweigh_skills: bool = False) -> None:
         self.message = message
-        self.key = key
+        self.direct_to = direct_to
         self.is_should_reweigh_skills = is_should_reweigh_skills
-
-
-class OutputMessageSignal(Exception):
-    def __init__(self, message: str, key: str) -> None:
-        self.message = message
-        self.key = key
 
 
 class Skill(ABC):
     def __init__(self, *, global_context: dict, skill_context: dict) -> None:
         self.global_context = global_context
         self.__skill_context = skill_context
-
-    def ask(self, message: str, key: Optional[str] = None) -> str:
-        key = key or message
-        answer = self.__skill_context.get(key)
-        if answer:
-            return answer
-        raise InputMessageSignal(message, key)
-
-    def specify(self, message: str, key: str) -> None:
-        raise InputMessageSignal(message, key, True)
-
-    def say(self, message: str, key: Optional[str] = None) -> None:
-        key = key or message
-        question = self.__skill_context.get(key)
-        if question:
-            return
-        raise OutputMessageSignal(message, key)
-
-    def get_or_call(self, function: Callable, *args, **kwargs) -> Any:
-        key = f"{function.__name__}{args}{kwargs}"
-        result = self.__skill_context.get(key)
-        if result:
-            return result
-        result = function(*args, **kwargs)
-        self.__skill_context[key] = result
-        return result
+        self.answers = []
 
     @abstractmethod
-    def run(self, message: str) -> None:
+    def start(self, initial_message: str) -> None:
         pass
 
+    def ask(self, question: str, direct_to: Callable):
+        self.answers.append(question)
+        raise InputMessageSignal(message=question, direct_to=direct_to)
 
-def get_or_call(method: Callable) -> Callable:
-    from functools import wraps
+    def specify(self, message: str, direct_to: Callable):
+        self.answers.append(message)
+        raise InputMessageSignal(message=message, direct_to=direct_to, is_should_reweigh_skills=True)
 
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
-        return self.get_or_call(method, *((self, ) + args), **kwargs)
-
-    return wrapper
+    def say(self, message: str) -> None:
+        self.answers.append(message)

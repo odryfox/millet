@@ -21,9 +21,7 @@ A Simple Example
 
     class MeetingSkill(Skill):
         def start(self, initial_message: str):
-            self.ask(question="What is your name?", direct_to=self.waiting_name)
-
-        def waiting_name(self, name: str)
+            name = self.ask(question="What is your name?")
             self.say(f"Nice to meet you {name}!")
 
     def skill_classifier(message: str) -> List[Type[Skill]]:

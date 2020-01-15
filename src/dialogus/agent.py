@@ -40,7 +40,15 @@ class Agent:
         for skill in skills:
             skill.global_context = user_context.params
             try:
-                skill.next_state(message)
+                if skill.waiting_key:
+                    skill.keys[skill.waiting_key] = message
+                    skill.waiting_key = None
+                    initial_message = skill.initial_message
+                else:
+                    skill.keys = {}
+                    initial_message = message
+                    skill.initial_message = initial_message
+                skill.next_state(initial_message)
                 answers += skill.answers[:]
                 skill.answers = []
                 user_context = UserContext(skills=[], params=user_context.params)
@@ -54,6 +62,7 @@ class Agent:
 
                 answers += skill.answers[:]
                 skill.answers = []
+
                 user_context.skills = [skill]
                 break
 

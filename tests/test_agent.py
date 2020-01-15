@@ -238,3 +238,20 @@ def test_do_not_move_to_new_skill_when_not_specify(bob_id: str, age_skill_class:
 
     assert conversation.query("Hello") == ["What is your name?"]
     assert conversation.query("What about age?") == ["Nice to meet you What about age?!"]
+
+
+def test_inline_ask(bob_id: str):
+    class MeetingSkill(Skill):
+        def start(self, initial_message: str):
+            self.say(f"Hello")
+            name = self.ask(question="What is your name?")
+            self.say(f"Nice to meet you {name}!")
+
+    def skill_classifier(message: str) -> List[Skill]:
+        return [MeetingSkill()]
+
+    agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user(bob_id)
+
+    assert conversation.query("Hello") == ["Hello", "What is your name?"]
+    assert conversation.query("Bob") == ["Nice to meet you Bob!"]

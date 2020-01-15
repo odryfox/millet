@@ -1,7 +1,7 @@
 from typing import Callable, List, Optional
 
 from dialogus.context import AgentContext, UserContext, RAMAgentContext
-from dialogus.skill import Skill, InputMessageSignal
+from dialogus.skill import Skill, InputMessageSignal, OutputMessageSignal
 
 
 class Conversation:
@@ -33,25 +33,18 @@ class Agent:
         if not user_context.skills:
             user_context.skills = self.__skill_classifier(message)
 
-        skills = user_context.skills
+        skills = user_context.skills[:]
 
         answers = []
 
-        for skill in skills:
+        i = 0
+        while i < len(skills):
+            skill = skills[i]
             skill.global_context = user_context.params
             try:
-                if skill.waiting_key:
-                    skill.keys[skill.waiting_key] = message
-                    skill.waiting_key = None
-                    initial_message = skill.initial_message
-                else:
-                    skill.keys = {}
-                    initial_message = message
-                    skill.initial_message = initial_message
-                skill.next_state(initial_message)
-                answers += skill.answers[:]
-                skill.answers = []
-                user_context = UserContext(skills=[], params=user_context.params)
+                skill.new_message(message)
+                user_context.skills.pop(0)
+                i += 1
             except InputMessageSignal as ims:
                 if ims.is_should_reweigh_skills:
                     skills = self.__skill_classifier(message)
@@ -60,11 +53,12 @@ class Agent:
                         self.context.set_user_context(user_id, user_context)
                         return self.query(message, user_id)
 
-                answers += skill.answers[:]
-                skill.answers = []
+                answers.append(ims.message)
 
                 user_context.skills = [skill]
                 break
+            except OutputMessageSignal as oms:
+                answers.append(oms.message)
 
         self.context.set_user_context(user_id, user_context)
 

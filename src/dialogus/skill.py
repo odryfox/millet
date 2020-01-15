@@ -2,6 +2,11 @@ from abc import abstractmethod, ABC
 from typing import Callable, Optional
 
 
+class OutputMessageSignal(Exception):
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
 class InputMessageSignal(Exception):
     def __init__(self, message: str, direct_to: Optional[Callable], is_should_reweigh_skills: bool = False) -> None:
         self.message = message
@@ -11,7 +16,6 @@ class InputMessageSignal(Exception):
 
 class Skill(ABC):
     def __init__(self) -> None:
-        self.answers = []
         self.next_state = self.start
         self.keys = {}
         self.waiting_key = None
@@ -27,14 +31,24 @@ class Skill(ABC):
     def specify(self, message: str, direct_to: Optional[Callable] = None):
         return self._input_message(message, direct_to, True)
 
+    def new_message(self, message):
+        self.initial_message = self.initial_message or message
+        if self.waiting_key:
+            self.keys[self.waiting_key] = message
+            self.waiting_key = None
+        self.next_state(self.initial_message)
+
     def _input_message(self, question: str, direct_to: Optional[Callable], is_should_reweigh_skills: bool) -> str:
         if not direct_to:
             result = self.keys.get(question)
             if result:
                 return result
             self.waiting_key = question
+        else:
+            self.keys = {}
+            self.waiting_key = None
+            self.initial_message = None
 
-        self.answers.append(question)
         self.next_state = direct_to or self.next_state
         raise InputMessageSignal(message=question, direct_to=direct_to, is_should_reweigh_skills=is_should_reweigh_skills)
 
@@ -46,7 +60,7 @@ class Skill(ABC):
         if result:
             return
         self.keys[message] = message
-        self.answers.append(message)
+        raise OutputMessageSignal(message=message)
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.answers == other.answers and self.next_state.__name__ == other.next_state.__name__
+        return isinstance(other, self.__class__) and self.next_state.__name__ == other.next_state.__name__

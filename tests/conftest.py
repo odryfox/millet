@@ -52,9 +52,9 @@ class AgeSkill(Skill):
     def waiting_age(self, age: str):
         try:
             age = int(age)
-            self.say("Ok")
         except:
             self.specify("Incorrect age: expected number, repeat pls", direct_to=self.waiting_age)
+        self.say("Ok")
 
 
 @pytest.fixture

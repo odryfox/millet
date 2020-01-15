@@ -1,34 +1,25 @@
 import pickle
 from abc import ABC, abstractmethod
-from typing import Type, List, Any
+from typing import List, Any
 
 from redis import Redis
 
 from dialogus.skill import Skill
 
 
-class DialogContext:
-    def __init__(self, skill_class: Type[Skill], params: dict):
-        self.skill_class = skill_class
-        self.params = params
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.skill_class == other.skill_class and self.params == other.params
-
-
 class UserContext:
-    def __init__(self, params: dict, dialogs: List[DialogContext]):
+    def __init__(self, params: dict, skills: List[Skill]):
         self.params = params
-        self.dialogs = dialogs
+        self.skills = skills
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.params == other.params and self.dialogs == other.dialogs
+        return isinstance(other, self.__class__) and self.params == other.params and self.skills == other.skills
 
 
 class AgentContext(ABC):
     @property
     def empty_user_context(self) -> UserContext:
-        return UserContext(params={}, dialogs=[])
+        return UserContext(params={}, skills=[])
 
     @abstractmethod
     def set_user_context(self, user_id: str, user_context: UserContext) -> None:

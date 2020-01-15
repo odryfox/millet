@@ -12,8 +12,8 @@ def test_answer_agent(bob_id: str):
         def start(self, initial_message: str):
             self.say(initial_message)
 
-    def skill_classifier(message: str) -> List[Type[Skill]]:
-        return [EchoSkill]
+    def skill_classifier(message: str) -> List[Skill]:
+        return [EchoSkill()]
 
     agent = Agent(skill_classifier=skill_classifier)
     conversation = agent.conversation_with_user(bob_id)
@@ -35,14 +35,14 @@ def test_choice_of_skills(bob_id: str):
         def start(self, initial_message: str):
             self.say("Bye")
 
-    def skill_classifier(message: str) -> List[Type[Skill]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if "Hello" in message:
-            skills.append(GreetingSkill)
+            skills.append(GreetingSkill())
 
         if "Goodbye" in message:
-            skills.append(PartingSkill)
+            skills.append(PartingSkill())
 
         return skills
 
@@ -63,8 +63,8 @@ def test_choice_of_many_skills(bob_id: str):
         def start(self, initial_message: str):
             self.say("It's me")
 
-    def skill_classifier(message: str) -> List[Type[Skill]]:
-        skills = [GreetingSkill, IntroduceYourselfSkill]
+    def skill_classifier(message: str) -> List[Skill]:
+        skills = [GreetingSkill(), IntroduceYourselfSkill()]
         return skills
 
     agent = Agent(skill_classifier=skill_classifier)
@@ -99,8 +99,8 @@ def test_multi_answers(bob_id: str):
         def waiting_mood(self, mood: str):
             self.say("Goodbye")
 
-    def skill_classifier(message: str) -> List[Type[Skill]]:
-        return [MoodSkill]
+    def skill_classifier(message: str) -> List[Skill]:
+        return [MoodSkill()]
 
     agent = Agent(skill_classifier=skill_classifier)
     conversation = agent.conversation_with_user(bob_id)
@@ -116,11 +116,11 @@ def test_continuous_conversation(bob_id: str, meeting_agent: Agent):
 
 
 def test_ram_persistent_continuous_conversation(bob_id: str, meeting_skill_class: Agent):
-    def skill_classifier(message: str) -> List[Type[Skill]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if "Hello" in message:
-            skills.append(meeting_skill_class)
+            skills.append(meeting_skill_class())
 
         return skills
 
@@ -134,11 +134,11 @@ def test_ram_persistent_continuous_conversation(bob_id: str, meeting_skill_class
 
 
 def test_redis_persistent_continuous_conversation(bob_id: str, redis: Redis, age_skill_class: Type[Skill]):
-    def skill_classifier(message: str) -> List[Type[Skill]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if "age" in message:
-            skills.append(age_skill_class)
+            skills.append(age_skill_class())
 
         return skills
 
@@ -169,11 +169,11 @@ def test_global_context_change_in_skill(bob_id: str):
             self.global_context["age"] = age
             self.say(f"You are {age} years old")
 
-    def skill_classifier(message: str) -> List[Type[Skill]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if "age" in message:
-            skills.append(AgeSkill)
+            skills.append(AgeSkill())
 
         return skills
 
@@ -186,11 +186,11 @@ def test_global_context_change_in_skill(bob_id: str):
 
 
 def test_specify(bob_id: str, age_skill_class: Type[Skill]):
-    def skill_classifier(message: str) -> List[Type[Skill]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if "age" in message:
-            skills.append(age_skill_class)
+            skills.append(age_skill_class())
 
         return skills
 
@@ -203,14 +203,14 @@ def test_specify(bob_id: str, age_skill_class: Type[Skill]):
 
 
 def test_move_to_new_skill_when_specify(bob_id: str, age_skill_class: Type[Skill], meeting_skill_class: Type[Skill]):
-    def skill_classifier(message: str) -> List[Type[Skill]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if "age" in message:
-            skills.append(age_skill_class)
+            skills.append(age_skill_class())
 
         if "Hello" in message:
-            skills.append(meeting_skill_class)
+            skills.append(meeting_skill_class())
 
         return skills
 
@@ -222,14 +222,14 @@ def test_move_to_new_skill_when_specify(bob_id: str, age_skill_class: Type[Skill
 
 
 def test_do_not_move_to_new_skill_when_not_specify(bob_id: str, age_skill_class: Type[Skill], meeting_skill_class: Type[Skill]):
-    def skill_classifier(message: str) -> List[Type[Skill]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if "age" in message:
-            skills.append(age_skill_class)
+            skills.append(age_skill_class())
 
         if "Hello" in message:
-            skills.append(meeting_skill_class)
+            skills.append(meeting_skill_class())
 
         return skills
 

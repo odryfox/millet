@@ -4,13 +4,15 @@ from dialogus.skill import InputMessageSignal, Skill
 
 
 def test_say(bob_id: str, meeting_skill_class: Type[Skill]):
-    meeting_skill = meeting_skill_class(global_context={}, skill_context={})
+    meeting_skill = meeting_skill_class()
+    meeting_skill.global_context = {}
     meeting_skill.say("Hello")
     assert meeting_skill.answers == ["Hello"]
 
 
 def test_ask(bob_id: str, meeting_skill_class: Type[Skill]):
-    meeting_skill = meeting_skill_class(global_context={}, skill_context={})
+    meeting_skill = meeting_skill_class()
+    meeting_skill.global_context = {}
 
     try:
         meeting_skill.ask("What's your name?", direct_to=meeting_skill.start)
@@ -21,7 +23,8 @@ def test_ask(bob_id: str, meeting_skill_class: Type[Skill]):
 
 
 def test_specify(bob_id: str, age_skill_class: Type[Skill]):
-    age_skill = age_skill_class(global_context={}, skill_context={})
+    age_skill = age_skill_class()
+    age_skill.global_context = {}
 
     try:
         age_skill.specify("Incorrect age: expected number, repeat pls", direct_to=age_skill.start)

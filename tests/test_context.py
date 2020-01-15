@@ -4,7 +4,7 @@ from dialogus.context import UserContext, RedisAgentContext, PickleSerializer, R
 
 
 def test_default_user_context(bob_id: str, redis: Redis):
-    default_user_context = UserContext(params={}, dialogs=[])
+    default_user_context = UserContext(params={}, skills=[])
 
     agent_context = RedisAgentContext(redis=redis)
     user_context = agent_context.get_user_context(bob_id)
@@ -13,7 +13,7 @@ def test_default_user_context(bob_id: str, redis: Redis):
 
 
 def test_reload_ram_context(bob_id: str, user_context: UserContext, redis: Redis):
-    default_user_context = UserContext(params={}, dialogs=[])
+    default_user_context = UserContext(params={}, skills=[])
 
     agent_context = RAMAgentContext()
     agent_context.set_user_context(bob_id, user_context)
@@ -40,4 +40,4 @@ def test_reload_redis_context(bob_id: str, user_context: UserContext, redis: Red
     new_agent_context = RedisAgentContext(redis=redis)
     loaded_user_context = new_agent_context.get_user_context(bob_id)
 
-    assert loaded_user_context == user_context
+    assert loaded_user_context.params == user_context.params

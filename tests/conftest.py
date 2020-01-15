@@ -5,7 +5,7 @@ import pytest
 from redis import Redis
 
 from dialogus import Skill, Agent
-from dialogus.context import DialogContext, UserContext
+from dialogus.context import UserContext
 
 
 @pytest.fixture
@@ -32,11 +32,11 @@ def meeting_skill_class() -> Type[Skill]:
 
 @pytest.fixture
 def meeting_agent(meeting_skill_class: Type[Skill]) -> Agent:
-    def skill_classifier(message: str) -> List[Type[Skill]]:
+    def skill_classifier(message: str) -> List[Skill]:
         skills = []
 
         if "Hello" in message:
-            skills.append(meeting_skill_class)
+            skills.append(meeting_skill_class())
 
         return skills
 
@@ -77,10 +77,4 @@ def user_context():
         "age": 42,
     }
 
-    skill_params = {
-        "How old are you?": 42,
-    }
-
-    dialogs = [DialogContext(skill_class=AgeSkill, params=skill_params)]
-
-    return UserContext(params=global_params, dialogs=dialogs)
+    return UserContext(params=global_params, skills=[AgeSkill()])

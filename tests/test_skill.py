@@ -177,3 +177,27 @@ def test_retry():
     assert skill.send("Hi") == SkillResult(answers=["Start", "Continue?"], relevant=True) and not skill.finished
     assert skill.send("I don't know") == SkillResult(answers=["Start", "Continue?"], relevant=False) and not skill.finished
     assert skill.send("No") == SkillResult(answers=["Bye"], relevant=True) and skill.finished
+
+
+def test_finish():
+    class EchoSkill(Skill):
+        def start(self, initial_message: str):
+            self.foo(initial_message)
+
+        def foo(self, message: str):
+            self.finish(message)
+
+    skill = EchoSkill()
+    assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=True) and skill.finished
+
+
+def test_abort():
+    class EchoSkill(Skill):
+        def start(self, initial_message: str):
+            self.foo(initial_message)
+
+        def foo(self, message: str):
+            self.abort(message)
+
+    skill = EchoSkill()
+    assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=False) and skill.finished

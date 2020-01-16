@@ -139,3 +139,21 @@ def test_reset():
 
     skill.reset()
     assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=True) and skill.finished
+
+
+def test_restart():
+    class RestartSkill(Skill):
+        def start(self, initial_message: str):
+            self.say('Start')
+            self.ask('Continue?', direct_to=self.waiting_answer)
+
+        def waiting_answer(self, answer: str):
+            if answer == 'Yes':
+                self.restart(initial_message=answer)
+            else:
+                self.say('Bye')
+
+    skill = RestartSkill()
+    assert skill.send("Hi") == SkillResult(answers=["Start", "Continue?"], relevant=True) and not skill.finished
+    assert skill.send("Yes") == SkillResult(answers=["Start", "Continue?"], relevant=True) and not skill.finished
+    assert skill.send("No") == SkillResult(answers=["Bye"], relevant=True) and skill.finished

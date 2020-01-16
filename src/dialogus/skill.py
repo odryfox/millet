@@ -40,6 +40,10 @@ class Skill(ABC):
         self._current_state = self.start
         self._initial_message = None
 
+    def restart(self, initial_message: str):
+        self.reset()
+        self._current_state(initial_message)
+
     def __eq__(self, other):
         return (
             isinstance(other, self.__class__)

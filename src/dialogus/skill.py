@@ -33,6 +33,13 @@ class Skill(ABC):
         self._initial_message = None
         self.global_context = None
 
+    def reset(self) -> None:
+        self._finished = False
+        self._context = {}
+        self._expected_question_key = None
+        self._current_state = self.start
+        self._initial_message = None
+
     def __eq__(self, other):
         return (
             isinstance(other, self.__class__)

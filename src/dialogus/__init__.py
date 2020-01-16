@@ -2,4 +2,4 @@ from .agent import Agent
 from .agent import Conversation
 from .skill import Skill
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"

@@ -127,3 +127,15 @@ def test_persistent_initial_message():
     skill = FriendNameSkill()
     assert skill.send("Bob") == SkillResult(answers=["Nice to meet you Bob!", "What's your friend's name?"], relevant=True) and not skill.finished
     assert skill.send("Alice") == SkillResult(answers=["Your friend is Alice!"], relevant=True) and skill.finished
+
+
+def test_reset():
+    class EchoSkill(Skill):
+        def start(self, initial_message: str):
+            self.say(initial_message)
+
+    skill = EchoSkill()
+    assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=True) and skill.finished
+
+    skill.reset()
+    assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=True) and skill.finished

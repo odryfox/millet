@@ -1,35 +1,117 @@
-from typing import Type
-
-from dialogus.skill import InputMessageSignal, OutputMessageSignal, Skill
+from dialogus.skill import SkillResult, Skill
 
 
-def test_say(bob_id: str, meeting_skill_class: Type[Skill]):
-    meeting_skill = meeting_skill_class()
-    meeting_skill.global_context = {}
+def test_eq():
+    class EmptySkill(Skill):
+        def start(self, initial_message: str):
+            pass
+
+    skill1 = EmptySkill()
+    skill2 = EmptySkill()
+
+    assert skill1 == skill2
+
+
+def test_skill_result_repr():
+    skill_result = SkillResult(answers=["Hi"], relevant=True)
+    assert repr(skill_result) == "SkillResult(answers=['Hi'], relevant=True)"
+
+
+def test_say():
+    class EchoSkill(Skill):
+        def start(self, initial_message: str):
+            self.say(initial_message)
+
+    skill = EchoSkill()
+    assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=True) and skill.finished
+
+
+def test_duplicate_message_say():
+    class DuplicateEchoSkill(Skill):
+        def start(self, initial_message: str):
+            self.say(initial_message * 2)
+
+    skill = DuplicateEchoSkill()
+    assert skill.send("Hi") == SkillResult(answers=["HiHi"], relevant=True) and skill.finished
+
+
+def test_multi_answers():
+    class GreetingSkill(Skill):
+        def start(self, initial_message: str):
+            self.say("Hello")
+            self.say("How are you?")
+
+    skill = GreetingSkill()
+    assert skill.send("Hi") == SkillResult(answers=["Hello", "How are you?"], relevant=True) and skill.finished
+
+
+def test_stop_exception():
+    class EchoSkill(Skill):
+        def start(self, initial_message: str):
+            self.say(initial_message)
+
+    skill = EchoSkill()
+    skill.send("Hi")
     try:
-        meeting_skill.say("Hello")
-        assert False, f"Expected {OutputMessageSignal.__name__}"
-    except OutputMessageSignal as oms:
-        assert oms.message == "Hello"
+        skill.send("Hi")
+        assert False, f"Expected {StopIteration.__name__}"
+    except StopIteration:
+        assert True
 
 
-def test_ask(bob_id: str, meeting_skill_class: Type[Skill]):
-    meeting_skill = meeting_skill_class()
-    meeting_skill.global_context = {}
+def test_ask():
+    class AgeSkill(Skill):
+        def start(self, initial_message: str):
+            age = self.ask("How old are you?")
+            self.say(f"You are {age} years old!")
 
-    try:
-        meeting_skill.ask("What's your name?", direct_to=meeting_skill.start)
-        assert False, f"Expected {InputMessageSignal.__name__}"
-    except InputMessageSignal as ims:
-        assert ims.message == "What's your name?" and ims.direct_to == meeting_skill.start and not ims.is_should_reweigh_skills
+    skill = AgeSkill()
+    assert skill.send("Hi") == SkillResult(answers=["How old are you?"], relevant=True) and not skill.finished
+    assert skill.send("42") == SkillResult(answers=["You are 42 years old!"], relevant=True) and skill.finished
 
 
-def test_specify(bob_id: str, age_skill_class: Type[Skill]):
-    age_skill = age_skill_class()
-    age_skill.global_context = {}
+def test_ask_with_direct_to():
+    class AgeSkill(Skill):
+        def start(self, initial_message: str):
+            self.ask("How old are you?", direct_to=self.wait_age)
 
-    try:
-        age_skill.specify("Incorrect age: expected number, repeat pls", direct_to=age_skill.start)
-        assert False, f"Expected {InputMessageSignal.__name__}"
-    except InputMessageSignal as ims:
-        assert ims.message == "Incorrect age: expected number, repeat pls" and ims.direct_to == age_skill.start and ims.is_should_reweigh_skills
+        def wait_age(self, age: str):
+            self.say(f"You are {age} years old!")
+
+    skill = AgeSkill()
+    assert skill.send("Hi") == SkillResult(answers=["How old are you?"], relevant=True) and not skill.finished
+    assert skill.send("42") == SkillResult(answers=["You are 42 years old!"], relevant=True) and skill.finished
+
+
+def test_specify():
+    class AgeSkill(Skill):
+        def start(self, initial_message: str):
+            age = self.ask("How old are you?")
+            try:
+                age = int(age)
+            except:
+                age = self.specify("Incorrect age. Repeat pls.")
+            self.say(f"You are {age} years old!")
+
+    skill = AgeSkill()
+    assert skill.send("Hi") == SkillResult(answers=["How old are you?"], relevant=True) and not skill.finished
+    assert skill.send("I don't know!") == SkillResult(answers=["Incorrect age. Repeat pls."], relevant=False) and not skill.finished
+    assert skill.send("42") == SkillResult(answers=["You are 42 years old!"], relevant=True) and skill.finished
+
+
+def test_specify_with_direct_to():
+    class AgeSkill(Skill):
+        def start(self, initial_message: str):
+            self.ask("How old are you?", direct_to=self.waiting_age)
+
+        def waiting_age(self, age: str):
+            try:
+                age = int(age)
+            except:
+                age = self.specify("Incorrect age. Repeat pls.")
+            self.say(f"You are {age} years old!")
+
+    skill = AgeSkill()
+    assert skill.send("Hi") == SkillResult(answers=["How old are you?"], relevant=True) and not skill.finished
+    assert skill.send("I don't know!") == SkillResult(answers=["Incorrect age. Repeat pls."], relevant=False) and not skill.finished
+    assert skill.send("42") == SkillResult(answers=["You are 42 years old!"], relevant=True) and skill.finished

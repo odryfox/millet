@@ -1,7 +1,7 @@
 from typing import Callable, List, Optional
 
-from dialogus.context import AgentContext, UserContext, RAMAgentContext
-from dialogus.skill import Skill, InputMessageSignal, OutputMessageSignal
+from dialogus.context import AgentContext, RAMAgentContext
+from dialogus.skill import Skill
 
 
 class Conversation:
@@ -41,24 +41,20 @@ class Agent:
         while i < len(skills):
             skill = skills[i]
             skill.global_context = user_context.params
-            try:
-                skill.new_message(message)
-                user_context.skills.pop(0)
-                i += 1
-            except InputMessageSignal as ims:
-                if ims.is_should_reweigh_skills:
-                    skills = self.__skill_classifier(message)
-                    if skills:
-                        user_context.skills = []
-                        self.context.set_user_context(user_id, user_context)
-                        return self.query(message, user_id)
+            skill_result = skill.send(message)
+            if not skill_result.relevant:
+                skills = self.__skill_classifier(message)
+                if skills:
+                    user_context.skills = skills
+                    self.context.set_user_context(user_id, user_context)
+                    return self.query(message, user_id)
 
-                answers.append(ims.message)
-
-                user_context.skills = [skill]
+            answers += skill_result.answers
+            if not skill.finished:
                 break
-            except OutputMessageSignal as oms:
-                answers.append(oms.message)
+
+            user_context.skills.pop(0)
+            i += 1
 
         self.context.set_user_context(user_id, user_context)
 

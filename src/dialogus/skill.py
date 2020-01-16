@@ -1,66 +1,102 @@
-from abc import abstractmethod, ABC
-from typing import Callable, Optional
+from abc import ABC, abstractmethod
+from typing import List, Optional, Callable
 
 
 class OutputMessageSignal(Exception):
-    def __init__(self, message: str) -> None:
+    def __init__(self, *, message: str, relevant: bool):
         self.message = message
+        self.relevant = relevant
 
 
-class InputMessageSignal(Exception):
-    def __init__(self, message: str, direct_to: Optional[Callable], is_should_reweigh_skills: bool = False) -> None:
-        self.message = message
-        self.direct_to = direct_to
-        self.is_should_reweigh_skills = is_should_reweigh_skills
+class FinishIteration(Exception):
+    pass
+
+
+class SkillResult:
+    def __init__(self, *, answers: List[str], relevant: bool):
+        self.answers = answers
+        self.relevant = relevant
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(answers={self.answers}, relevant={self.relevant})"
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self.answers == other.answers and self.relevant == other.relevant
 
 
 class Skill(ABC):
-    def __init__(self) -> None:
-        self.next_state = self.start
-        self.keys = {}
-        self.waiting_key = None
-        self.initial_message = None
-
-    @abstractmethod
-    def start(self, initial_message: str) -> None:
-        pass
-
-    def ask(self, question: str, direct_to: Optional[Callable] = None):
-        return self._input_message(question, direct_to, False)
-
-    def specify(self, message: str, direct_to: Optional[Callable] = None):
-        return self._input_message(message, direct_to, True)
-
-    def new_message(self, message):
-        self.initial_message = self.initial_message or message
-        if self.waiting_key:
-            self.keys[self.waiting_key] = message
-            self.waiting_key = None
-        self.next_state(self.initial_message)
-
-    def _input_message(self, question: str, direct_to: Optional[Callable], is_should_reweigh_skills: bool) -> str:
-        if not direct_to:
-            result = self.keys.get(question)
-            if result:
-                return result
-            self.waiting_key = question
-        else:
-            self.keys = {}
-            self.waiting_key = None
-            self.initial_message = None
-
-        self.next_state = direct_to or self.next_state
-        raise InputMessageSignal(message=question, direct_to=direct_to, is_should_reweigh_skills=is_should_reweigh_skills)
-
-    def say(self, message: str) -> None:
-        self._output_message(message)
-
-    def _output_message(self, message):
-        result = self.keys.get(message)
-        if result:
-            return
-        self.keys[message] = message
-        raise OutputMessageSignal(message=message)
+    def __init__(self):
+        self._finished = False
+        self._context = {}
+        self._expected_question_key = None
+        self._current_state = self.start
+        self.global_context = None
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.next_state.__name__ == other.next_state.__name__
+        return (
+            isinstance(other, self.__class__)
+            and self._finished == other._finished
+            and self._context == other._context
+            and self._expected_question_key == other._expected_question_key
+            and self._current_state.__name__ == other._current_state.__name__
+        )
+
+    @property
+    def finished(self) -> bool:
+        return self._finished
+
+    @abstractmethod
+    def start(self, initial_message: str):
+        pass
+
+    def say(self, message: str):
+        self._have_new_message(message=message, relevant=True)
+
+    def _have_new_message(self, *, message: str, relevant: bool):
+        if message in self._context:
+            return
+        self._context[message] = None
+        raise OutputMessageSignal(message=message, relevant=relevant)
+
+    def ask(self, question: str, direct_to: Optional[Callable] = None) -> str:
+        return self._need_new_message(question=question, direct_to=direct_to, relevant=True)
+
+    def specify(self, question: str, direct_to: Optional[Callable] = None):
+        return self._need_new_message(question=question, direct_to=direct_to, relevant=False)
+
+    def _need_new_message(self, *, question: str, direct_to: Optional[Callable], relevant: bool) -> str:
+        self._have_new_message(message=question, relevant=relevant)
+        if direct_to:
+            self._context = {}
+            self._current_state = direct_to
+        else:
+            if question in self._context:
+                answer = self._context[question]
+                if answer is not None:
+                    return answer
+            self._expected_question_key = question
+        raise FinishIteration
+
+    def send(self, message: str):
+        if self.finished:
+            raise StopIteration
+
+        if self._expected_question_key:
+            self._context[self._expected_question_key] = message
+            self._expected_question_key = None
+
+        answers = []
+        relevant = True
+
+        while True:
+            try:
+                self._current_state(message)
+                self._finished = True
+                break
+            except OutputMessageSignal as oms:
+                answers.append(oms.message)
+                relevant &= oms.relevant
+            except FinishIteration:
+                break
+
+        return SkillResult(answers=answers, relevant=relevant)

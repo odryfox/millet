@@ -8,7 +8,12 @@ class OutputMessageSignal(Exception):
         self.relevant = relevant
 
 
-class FinishIteration(Exception):
+class RestartIterationSignal(Exception):
+    def __init__(self, *, relevant: bool):
+        self.relevant = relevant
+
+
+class FinishIterationSignal(Exception):
     pass
 
 
@@ -41,8 +46,15 @@ class Skill(ABC):
         self._initial_message = None
 
     def restart(self, initial_message: str):
+        self._restart(initial_message=initial_message, relevant=True)
+
+    def retry(self, initial_message: str):
+        self._restart(initial_message=initial_message, relevant=False)
+
+    def _restart(self, *, initial_message: str, relevant: bool):
         self.reset()
-        self._current_state(initial_message)
+        self._initial_message = initial_message
+        raise RestartIterationSignal(relevant=relevant)
 
     def __eq__(self, other):
         return (
@@ -89,7 +101,7 @@ class Skill(ABC):
                 if answer is not None:
                     return answer
             self._expected_question_key = question
-        raise FinishIteration
+        raise FinishIterationSignal
 
     def send(self, message: str):
         if self.finished:
@@ -112,7 +124,9 @@ class Skill(ABC):
             except OutputMessageSignal as oms:
                 answers.append(oms.message)
                 relevant &= oms.relevant
-            except FinishIteration:
+            except RestartIterationSignal as ris:
+                relevant &= ris.relevant
+            except FinishIterationSignal:
                 break
 
         return SkillResult(answers=answers, relevant=relevant)

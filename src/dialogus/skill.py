@@ -30,6 +30,7 @@ class Skill(ABC):
         self._context = {}
         self._expected_question_key = None
         self._current_state = self.start
+        self._initial_message = None
         self.global_context = None
 
     def __eq__(self, other):
@@ -39,6 +40,7 @@ class Skill(ABC):
             and self._context == other._context
             and self._expected_question_key == other._expected_question_key
             and self._current_state.__name__ == other._current_state.__name__
+            and self._initial_message == other._initial_message
         )
 
     @property
@@ -69,6 +71,7 @@ class Skill(ABC):
         if direct_to:
             self._context = {}
             self._current_state = direct_to
+            self._initial_message = None
         else:
             if question in self._context:
                 answer = self._context[question]
@@ -88,9 +91,11 @@ class Skill(ABC):
         answers = []
         relevant = True
 
+        self._initial_message = self._initial_message or message
+
         while True:
             try:
-                self._current_state(message)
+                self._current_state(self._initial_message)
                 self._finished = True
                 break
             except OutputMessageSignal as oms:

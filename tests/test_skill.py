@@ -115,3 +115,15 @@ def test_specify_with_direct_to():
     assert skill.send("Hi") == SkillResult(answers=["How old are you?"], relevant=True) and not skill.finished
     assert skill.send("I don't know!") == SkillResult(answers=["Incorrect age. Repeat pls."], relevant=False) and not skill.finished
     assert skill.send("42") == SkillResult(answers=["You are 42 years old!"], relevant=True) and skill.finished
+
+
+def test_persistent_initial_message():
+    class FriendNameSkill(Skill):
+        def start(self, initial_message: str):
+            self.say(f"Nice to meet you {initial_message}!")
+            friend_name = self.ask("What's your friend's name?")
+            self.say(f"Your friend is {friend_name}!")
+
+    skill = FriendNameSkill()
+    assert skill.send("Bob") == SkillResult(answers=["Nice to meet you Bob!", "What's your friend's name?"], relevant=True) and not skill.finished
+    assert skill.send("Alice") == SkillResult(answers=["Your friend is Alice!"], relevant=True) and skill.finished

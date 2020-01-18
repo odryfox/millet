@@ -11,6 +11,14 @@ Welcome to Millet's documentation!
    :caption: Contents:
 
 
+Installing
+----------
+
+.. code-block:: text
+
+    pip install Millet
+
+
 A Simple Example
 ----------------
 

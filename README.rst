@@ -16,6 +16,15 @@ A simple framework for building complex dialogue systems.
 .. image:: https://coveralls.io/repos/github/odryfox/millet/badge.svg?branch=dev
     :target: https://coveralls.io/github/odryfox/millet?branch=dev
 
+
+Installing
+----------
+
+.. code-block:: text
+
+    pip install Millet
+
+
 A Simple Example
 ----------------
 

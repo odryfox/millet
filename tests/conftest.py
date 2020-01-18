@@ -4,8 +4,8 @@ import pytest
 
 from redis import Redis
 
-from dialogus import Skill, Agent
-from dialogus.context import UserContext
+from millet import Skill, Agent
+from millet.context import UserContext
 
 
 @pytest.fixture

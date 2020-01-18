@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'Dialogus'
+project = 'Millet'
 copyright = '2019, Vyacheslav Rusov'
 author = 'Vyacheslav Rusov'
 

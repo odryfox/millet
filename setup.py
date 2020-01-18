@@ -7,15 +7,15 @@ from setuptools import setup
 with io.open("README.rst", "rt", encoding="utf8") as f:
     readme = f.read()
 
-with io.open("src/dialogus/__init__.py", "rt", encoding="utf8") as f:
+with io.open("src/millet/__init__.py", "rt", encoding="utf8") as f:
     version = re.search(r'__version__ = "(.*?)"', f.read()).group(1)
 
 setup(
-    name="Dialogus",
+    name="Millet",
     version=version,
     project_urls={
-        "Code": "https://github.com/odryfox/dialogus",
-        "Issue tracker": "https://github.com/odryfox/dialogus/issues",
+        "Code": "https://github.com/odryfox/millet",
+        "Issue tracker": "https://github.com/odryfox/millet/issues",
     },
     license="BSD-3-Clause",
     author="Vyacheslav Rusov",

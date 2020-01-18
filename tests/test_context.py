@@ -1,6 +1,6 @@
 from redis import Redis
 
-from dialogus.context import UserContext, RedisAgentContext, PickleSerializer, RAMAgentContext
+from millet.context import UserContext, RedisAgentContext, PickleSerializer, RAMAgentContext
 
 
 def test_default_user_context(bob_id: str, redis: Redis):

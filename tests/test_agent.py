@@ -3,8 +3,8 @@ from typing import List, Type
 import pytest
 from redis import Redis
 
-from dialogus import Agent, Skill
-from dialogus.context import RAMAgentContext, RedisAgentContext
+from millet import Agent, Skill
+from millet.context import RAMAgentContext, RedisAgentContext
 
 
 def test_answer_agent(bob_id: str):

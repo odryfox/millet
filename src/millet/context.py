@@ -4,7 +4,7 @@ from typing import List, Any
 
 from redis import Redis
 
-from dialogus.skill import Skill
+from millet.skill import Skill
 
 
 class UserContext:

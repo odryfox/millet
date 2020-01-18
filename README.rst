@@ -1,20 +1,20 @@
-Dialogus
-========
+Millet
+======
 
 A simple framework for building complex dialogue systems.
 
-.. image:: https://badge.fury.io/py/Dialogus.svg
-    :target: https://badge.fury.io/py/Dialogus
+.. image:: https://badge.fury.io/py/Millet.svg
+    :target: https://badge.fury.io/py/Millet
 
-.. image:: https://readthedocs.org/projects/dialogus/badge/?version=latest
-    :target: https://dialogus.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/millet/badge/?version=latest
+    :target: https://millet.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://travis-ci.org/odryfox/dialogus.svg?branch=dev
-    :target: https://travis-ci.org/odryfox/dialogus
+.. image:: https://travis-ci.org/odryfox/millet.svg?branch=dev
+    :target: https://travis-ci.org/odryfox/millet
 
-.. image:: https://coveralls.io/repos/github/odryfox/dialogus/badge.svg?branch=dev
-    :target: https://coveralls.io/github/odryfox/dialogus?branch=dev
+.. image:: https://coveralls.io/repos/github/odryfox/millet/badge.svg?branch=dev
+    :target: https://coveralls.io/github/odryfox/millet?branch=dev
 
 A Simple Example
 ----------------
@@ -22,7 +22,7 @@ A Simple Example
 .. code-block:: python
 
     from typing import List, Type
-    from dialogus import Agent, Skill
+    from millet import Agent, Skill
 
     class MeetingSkill(Skill):
         def start(self, initial_message: str):

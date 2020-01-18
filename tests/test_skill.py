@@ -1,4 +1,4 @@
-from dialogus.skill import SkillResult, Skill
+from millet.skill import SkillResult, Skill
 
 
 def test_eq():

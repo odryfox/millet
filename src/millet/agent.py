@@ -1,7 +1,7 @@
 from typing import Callable, List, Optional
 
-from dialogus.context import AgentContext, RAMAgentContext
-from dialogus.skill import Skill
+from millet.context import AgentContext, RAMAgentContext
+from millet.skill import Skill
 
 
 class Conversation:

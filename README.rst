@@ -10,11 +10,11 @@ A simple framework for building complex dialogue systems.
     :target: https://millet.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://travis-ci.org/odryfox/millet.svg?branch=dev
+.. image:: https://travis-ci.org/odryfox/millet.svg?branch=master
     :target: https://travis-ci.org/odryfox/millet
 
-.. image:: https://coveralls.io/repos/github/odryfox/millet/badge.svg?branch=dev
-    :target: https://coveralls.io/github/odryfox/millet?branch=dev
+.. image:: https://coveralls.io/repos/github/odryfox/millet/badge.svg?branch=master
+    :target: https://coveralls.io/github/odryfox/millet?branch=master
 
 
 Installing

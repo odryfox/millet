@@ -201,3 +201,21 @@ def test_abort():
 
     skill = EchoSkill()
     assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=False) and skill.finished
+
+
+def test_number_of_starts():
+    class AgeSkill(Skill):
+        def __init__(self):
+            self.number_of_starts = 0
+            super().__init__()
+
+        def start(self, initial_message: str):
+            self.number_of_starts += 1
+            age = self.ask("How old are you?")
+            self.say(f"You are {age} years old!")
+
+    skill = AgeSkill()
+    skill.send("Hi")
+    assert skill.number_of_starts == 1
+    skill.send("42")
+    assert skill.number_of_starts == 2

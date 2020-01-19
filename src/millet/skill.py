@@ -6,11 +6,6 @@ class SkillSignal(Exception):
     pass
 
 
-class OutputMessageSignal(SkillSignal):
-    def __init__(self, *, message: str):
-        self.message = message
-
-
 class IterationSignal(SkillSignal):
     def __init__(self, *, relevant: bool):
         self.relevant = relevant
@@ -44,6 +39,7 @@ class Skill(ABC):
         self._current_state = self.start
         self._initial_message = None
         self.global_context = None
+        self._answers = []
 
     def reset(self) -> None:
         self._finished = False
@@ -88,7 +84,7 @@ class Skill(ABC):
         if message in self._context:
             return
         self._context[message] = None
-        raise OutputMessageSignal(message=message)
+        self._answers.append(message)
 
     def ask(self, question: str, direct_to: Optional[Callable] = None) -> str:
         return self._need_new_message(question=question, direct_to=direct_to, relevant=True)
@@ -131,7 +127,7 @@ class Skill(ABC):
             self._context[self._expected_question_key] = message
             self._expected_question_key = None
 
-        answers = []
+        self._answers = []
         relevant = True
 
         self._initial_message = self._initial_message or message
@@ -141,11 +137,9 @@ class Skill(ABC):
                 self._current_state(self._initial_message)
                 self._finished = True
                 break
-            except OutputMessageSignal as signal:
-                answers.append(signal.message)
             except IterationSignal as signal:
                 relevant &= signal.relevant
                 if isinstance(signal, FinishIterationSignal):
                     break
 
-        return SkillResult(answers=answers, relevant=relevant)
+        return SkillResult(answers=self._answers, relevant=relevant)

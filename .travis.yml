@@ -4,6 +4,7 @@ install:
   - pip install redis
   - pip install .
 script:
+  - python -m pytest examples
   - pytest --cov=millet
 services:
   - redis-server

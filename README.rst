@@ -38,7 +38,7 @@ A Simple Example
             name = self.ask(question="What is your name?")
             self.say(f"Nice to meet you {name}!")
 
-    def skill_classifier(message: str) -> List[Type[Skill]]:
+    def skill_classifier(message: str) -> List[Skill]:
         return [MeetingSkill()]
 
     agent = Agent(skill_classifier=skill_classifier)

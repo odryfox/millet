@@ -1,10 +1,10 @@
 import pickle
 from abc import ABC, abstractmethod
-from typing import List, Any
-
-from redis import Redis
+from typing import List, Any, TypeVar
 
 from millet.skill import Skill
+
+Redis = TypeVar("Redis")
 
 
 class UserContext:

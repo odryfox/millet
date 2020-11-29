@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Any
 
 from millet.context import AgentContext, RAMAgentContext
 from millet.skill import Skill
@@ -9,12 +9,12 @@ class Conversation:
         self.agent = agent
         self.user_id = user_id
 
-    def query(self, message: str) -> List[str]:
+    def query(self, message: Any) -> List[Any]:
         return self.agent.query(message, self.user_id)
 
 
 class Agent:
-    def __init__(self, skill_classifier: Callable[[str], List[Skill]], context: Optional[AgentContext] = None):
+    def __init__(self, skill_classifier: Callable[[Any], List[Skill]], context: Optional[AgentContext] = None):
         if not callable(skill_classifier):
             raise TypeError("skill_classifier must be a function")
 
@@ -27,7 +27,7 @@ class Agent:
     def conversation_with_user(self, user_id: str) -> Conversation:
         return Conversation(agent=self, user_id=user_id)
 
-    def query(self, message: str, user_id: str) -> List[str]:
+    def query(self, message: Any, user_id: str) -> List[Any]:
         user_context = self.context.get_user_context(user_id)
 
         if not user_context.skills:

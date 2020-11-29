@@ -1,3 +1,5 @@
+from typing import Any
+
 from millet.skill import SkillResult, Skill
 
 
@@ -219,3 +221,18 @@ def test_number_of_starts():
     assert skill.number_of_starts == 1
     skill.send("42")
     assert skill.number_of_starts == 2
+
+
+def test_any_message_format():
+    class EchoSkill(Skill):
+        def start(self, initial_message: Any):
+            self.say(initial_message)
+
+    skill = EchoSkill()
+
+    message = {"message": "Hi", "button": None}
+    result = skill.send(message)
+
+    assert result.answers == [message]
+    assert result.relevant
+    assert skill.finished

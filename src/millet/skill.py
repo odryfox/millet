@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Any
 
 
 class SkillSignal(Exception):
@@ -20,7 +20,7 @@ class FinishIterationSignal(IterationSignal):
 
 
 class SkillResult:
-    def __init__(self, *, answers: List[str], relevant: bool):
+    def __init__(self, *, answers: List[Any], relevant: bool):
         self.answers = answers
         self.relevant = relevant
 
@@ -48,13 +48,13 @@ class Skill(ABC):
         self._current_state = self.start
         self._initial_message = None
 
-    def restart(self, initial_message: str):
+    def restart(self, initial_message: Any):
         self._restart(initial_message=initial_message, relevant=True)
 
-    def retry(self, initial_message: str):
+    def retry(self, initial_message: Any):
         self._restart(initial_message=initial_message, relevant=False)
 
-    def _restart(self, *, initial_message: str, relevant: bool):
+    def _restart(self, *, initial_message: Any, relevant: bool):
         self.reset()
         self._initial_message = initial_message
         raise RestartIterationSignal(relevant=relevant)
@@ -74,25 +74,26 @@ class Skill(ABC):
         return self._finished
 
     @abstractmethod
-    def start(self, initial_message: str):
+    def start(self, initial_message: Any):
         pass
 
-    def say(self, message: str):
+    def say(self, message: Any):
         self._have_new_message(message=message)
 
-    def _have_new_message(self, *, message: str):
-        if message in self._context:
+    def _have_new_message(self, *, message: Any):
+        message_str = str(message)
+        if message_str in self._context:
             return
-        self._context[message] = None
+        self._context[message_str] = None
         self._answers.append(message)
 
-    def ask(self, question: str, direct_to: Optional[Callable] = None) -> str:
+    def ask(self, question: Any, direct_to: Optional[Callable] = None) -> Any:
         return self._need_new_message(question=question, direct_to=direct_to, relevant=True)
 
-    def specify(self, question: str, direct_to: Optional[Callable] = None):
+    def specify(self, question: Any, direct_to: Optional[Callable] = None):
         return self._need_new_message(question=question, direct_to=direct_to, relevant=False)
 
-    def _need_new_message(self, *, question: str, direct_to: Optional[Callable], relevant: bool) -> str:
+    def _need_new_message(self, *, question: Any, direct_to: Optional[Callable], relevant: bool) -> Any:
         self._have_new_message(message=question)
         if direct_to:
             self._context = {}
@@ -106,20 +107,20 @@ class Skill(ABC):
             self._expected_question_key = question
         raise FinishIterationSignal(relevant=relevant)
 
-    def _exit(self, *, message: str, relevant: bool):
+    def _exit(self, *, message: Any, relevant: bool):
         self._have_new_message(message=message)
         self.reset()
         self._finished = True
         self._current_state = None
         raise FinishIterationSignal(relevant=relevant)
 
-    def finish(self, message: str):
+    def finish(self, message: Any):
         self._exit(message=message, relevant=True)
 
-    def abort(self, reason: str):
+    def abort(self, reason: Any):
         self._exit(message=reason, relevant=False)
 
-    def send(self, message: str):
+    def send(self, message: Any):
         if self.finished:
             raise StopIteration
 

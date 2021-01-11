@@ -1,7 +1,17 @@
-from typing import Callable, List, Optional, Any
+from abc import ABC, abstractmethod
+from typing import Callable, List, Optional, Any, Union
 
 from millet.context import AgentContext, RAMAgentContext
 from millet.skill import Skill
+
+
+class BaseSkillClassifier(ABC):
+    @abstractmethod
+    def classify(self, message: Any) -> List[Skill]:
+        pass
+
+
+FunctionalSkillClassifier = Callable[[Any], List[Skill]]
 
 
 class Conversation:
@@ -14,15 +24,29 @@ class Conversation:
 
 
 class Agent:
-    def __init__(self, skill_classifier: Callable[[Any], List[Skill]], context: Optional[AgentContext] = None):
-        if not callable(skill_classifier):
-            raise TypeError("skill_classifier must be a function")
+    def __init__(
+        self,
+        skill_classifier: Union[BaseSkillClassifier, FunctionalSkillClassifier],
+        context: Optional[AgentContext] = None,
+    ):
+        if (
+            not isinstance(skill_classifier, BaseSkillClassifier) and
+            not callable(skill_classifier)
+        ):
+            raise TypeError("skill_classifier must be a BaseSkillClassifier instance or a function")
 
         if not context:
             context = RAMAgentContext()
 
         self.__skill_classifier = skill_classifier
         self.context = context
+
+    def __skill_classify(self, message: Any) -> List[Skill]:
+        if isinstance(self.__skill_classifier, BaseSkillClassifier):
+            return self.__skill_classifier.classify(message)
+
+        if callable(self.__skill_classifier):
+            return self.__skill_classifier(message)
 
     def conversation_with_user(self, user_id: str) -> Conversation:
         return Conversation(agent=self, user_id=user_id)
@@ -31,7 +55,7 @@ class Agent:
         user_context = self.context.get_user_context(user_id)
 
         if not user_context.skills:
-            user_context.skills = self.__skill_classifier(message)
+            user_context.skills = self.__skill_classify(message)
 
         skills = user_context.skills[:]
 
@@ -43,7 +67,7 @@ class Agent:
             skill.global_context = user_context.params
             skill_result = skill.send(message)
             if not skill_result.relevant:
-                skills = self.__skill_classifier(message)
+                skills = self.__skill_classify(message)
                 if skills:
                     user_context.skills = skills
                     self.context.set_user_context(user_id, user_context)

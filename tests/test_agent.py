@@ -4,6 +4,7 @@ import pytest
 from redis import Redis
 
 from millet import Agent, Skill
+from millet.agent import BaseSkillClassifier
 from millet.context import RAMAgentContext, RedisAgentContext
 
 
@@ -71,6 +72,44 @@ def test_choice_of_many_skills(bob_id: str):
     conversation = agent.conversation_with_user(bob_id)
 
     assert conversation.query("Hello") == ["Hello", "It's me"]
+
+
+def test_class_skill_classifier(bob_id: str):
+    class GreetingSkill(Skill):
+        def start(self, initial_message: str):
+            self.say("Hi")
+
+    class PartingSkill(Skill):
+        def start(self, initial_message: str):
+            self.say("Bye")
+
+    class SkillClassifier(BaseSkillClassifier):
+        def __init__(self, hello_phrase: str, goodbye_phrase: str):
+            self.hello_phrase = hello_phrase
+            self.goodbye_phrase = goodbye_phrase
+
+        def classify(self, message: str) -> List[Skill]:
+            skills = []
+
+            if self.hello_phrase in message:
+                skills.append(GreetingSkill())
+
+            if self.goodbye_phrase in message:
+                skills.append(PartingSkill())
+
+            return skills
+
+    skill_classifier = SkillClassifier(
+        hello_phrase="Hello",
+        goodbye_phrase="Goodbye",
+    )
+
+    agent = Agent(skill_classifier=skill_classifier)
+    conversation = agent.conversation_with_user(bob_id)
+
+    assert conversation.query("Hello") == ["Hi"]
+    assert conversation.query("Goodbye") == ["Bye"]
+    assert conversation.query("How are you?") == []
 
 
 def test_separation_context_on_users(bob_id: str, alice_id: str, meeting_agent: Agent):

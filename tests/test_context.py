@@ -1,43 +1,116 @@
+import pytest
 from redis import Redis
 
-from millet.context import UserContext, RedisAgentContext, PickleSerializer, RAMAgentContext
+from millet.context import UserContext, RAMContextManager, PickleSerializer, RedisContextManager
 
 
-def test_default_user_context(bob_id: str, redis: Redis):
-    default_user_context = UserContext(params={}, skills=[])
-
-    agent_context = RedisAgentContext(redis=redis)
-    user_context = agent_context.get_user_context(bob_id)
-
-    assert user_context == default_user_context
+_empty_user_context = UserContext(
+    skill_names=[],
+    state_names=[],
+    messages=[],
+)
 
 
-def test_reload_ram_context(bob_id: str, user_context: UserContext, redis: Redis):
-    default_user_context = UserContext(params={}, skills=[])
+class TestRAMContextManager:
 
-    agent_context = RAMAgentContext()
-    agent_context.set_user_context(bob_id, user_context)
+    def setup_method(self):
+        self.context_manager = RAMContextManager()
 
-    new_agent_context = RAMAgentContext()
-    loaded_user_context = new_agent_context.get_user_context(bob_id)
+    def test_get_user_context__user_context_doesnt_exist(self):
+        other_user_context = UserContext(
+            skill_names=['GreetingSkill', 'BuySkill'],
+            state_names=[None, 'payment'],
+            messages=['hello, i want to buy iPhone'],
+        )
+        self.context_manager.set_user_context('Alice', other_user_context)
 
-    assert loaded_user_context == default_user_context
+        actual_user_context = self.context_manager.get_user_context('Bob')
+
+        assert actual_user_context == _empty_user_context
+
+    def test_reload_user_context__context_manager_in_ram(self):
+        user_context = UserContext(
+            skill_names=['GreetingSkill', 'BuySkill'],
+            state_names=[None, 'payment'],
+            messages=['hello, i want to buy iPhone'],
+        )
+        self.context_manager.set_user_context('Bob', user_context)
+
+        reloaded_user_context = self.context_manager.get_user_context('Bob')
+
+        assert reloaded_user_context == user_context
+
+    def test_reload_user_context__context_manager_was_erased_from_ram(self):
+        user_context = UserContext(
+            skill_names=['GreetingSkill', 'BuySkill'],
+            state_names=[None, 'payment'],
+            messages=['hello, i want to buy iPhone'],
+        )
+        self.context_manager.set_user_context('Bob', user_context)
+
+        context_manager = RAMContextManager()
+        reloaded_user_context = context_manager.get_user_context('Bob')
+
+        assert reloaded_user_context == _empty_user_context
 
 
-def test_pickle_reserialize(user_context: UserContext):
-    serializer = PickleSerializer()
-    serialized_user_context = serializer.dumps(user_context)
-    serializer = PickleSerializer()
-    deserailized_user_context = serializer.loads(serialized_user_context)
+class TestPickleSerializer:
 
-    assert deserailized_user_context == user_context
+    def test_reload(self):
+        user_context = UserContext(
+            skill_names=['GreetingSkill', 'BuySkill'],
+            state_names=[None, 'payment'],
+            messages=['hello, i want to buy iPhone'],
+        )
+        serializer = PickleSerializer()
+        serialized_user_context = serializer.dumps(user_context)
+
+        serializer = PickleSerializer()
+        reloaded_user_context = serializer.loads(serialized_user_context)
+
+        assert reloaded_user_context == user_context
 
 
-def test_reload_redis_context(bob_id: str, user_context: UserContext, redis: Redis):
-    agent_context = RedisAgentContext(redis=redis)
-    agent_context.set_user_context(bob_id, user_context)
+class TestRedisContextManager:
 
-    new_agent_context = RedisAgentContext(redis=redis)
-    loaded_user_context = new_agent_context.get_user_context(bob_id)
+    @pytest.fixture(autouse=True)
+    def setup_method_fixture(self, redis: Redis):
+        self.redis = redis
+        self.context_manager = RedisContextManager(redis=redis)
 
-    assert loaded_user_context.params == user_context.params
+    def test_get_user_context__user_context_doesnt_exist(self):
+        other_user_context = UserContext(
+            skill_names=['GreetingSkill', 'BuySkill'],
+            state_names=[None, 'payment'],
+            messages=['hello, i want to buy iPhone'],
+        )
+        self.context_manager.set_user_context('Alice', other_user_context)
+
+        actual_user_context = self.context_manager.get_user_context('Bob')
+
+        assert actual_user_context == _empty_user_context
+
+    def test_reload_user_context__context_manager_in_ram(self):
+        user_context = UserContext(
+            skill_names=['GreetingSkill', 'BuySkill'],
+            state_names=[None, 'payment'],
+            messages=['hello, i want to buy iPhone'],
+        )
+        self.context_manager.set_user_context('Bob', user_context)
+
+        reloaded_user_context = self.context_manager.get_user_context('Bob')
+
+        assert reloaded_user_context == user_context
+
+    def test_reload_user_context__context_manager_was_erased_from_ram(self):
+        user_context = UserContext(
+            skill_names=['GreetingSkill', 'BuySkill'],
+            state_names=[None, 'payment'],
+            messages=['hello, i want to buy iPhone'],
+        )
+        self.context_manager.set_user_context('Bob', user_context)
+
+        context_manager = RedisContextManager(redis=self.redis)
+        reloaded_user_context = context_manager.get_user_context('Bob')
+
+        assert reloaded_user_context == user_context

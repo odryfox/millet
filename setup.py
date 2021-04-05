@@ -30,6 +30,7 @@ setup(
             "pytest",
             "mkdocs",
             "redis",
+            "isort",
         ],
         "docs": [
             "mkdocs",

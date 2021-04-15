@@ -1,238 +1,152 @@
-from typing import Any
+from millet import BaseSkill
 
-from millet.skill import SkillResult, Skill
 
+class TestSkill:
 
-def test_eq():
-    class EmptySkill(Skill):
-        def start(self, initial_message: str):
-            pass
+    def test_say(self):
 
-    skill1 = EmptySkill()
-    skill2 = EmptySkill()
+        class EchoSkill(BaseSkill):
+            def start(self, message: str):
+                self.say(message)
 
-    assert skill1 == skill2
+        skill = EchoSkill()
 
+        result = skill.execute(messages=['hello'], state_name=None)
 
-def test_skill_result_repr():
-    skill_result = SkillResult(answers=["Hi"], relevant=True)
-    assert repr(skill_result) == "SkillResult(answers=['Hi'], relevant=True)"
+        assert result.answers == ['hello']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None
 
+        result = skill.execute(messages=['bye'], state_name=None)
 
-def test_say():
-    class EchoSkill(Skill):
-        def start(self, initial_message: str):
-            self.say(initial_message)
+        assert result.answers == ['bye']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None
 
-    skill = EchoSkill()
-    assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=True) and skill.finished
+    def test_double_say(self):
 
+        class DoubleEchoSkill(BaseSkill):
+            def start(self, message: str):
+                self.say(message)
+                self.say(message)
 
-def test_duplicate_message_say():
-    class DuplicateEchoSkill(Skill):
-        def start(self, initial_message: str):
-            self.say(initial_message * 2)
+        skill = DoubleEchoSkill()
 
-    skill = DuplicateEchoSkill()
-    assert skill.send("Hi") == SkillResult(answers=["HiHi"], relevant=True) and skill.finished
+        result = skill.execute(messages=['hello'], state_name=None)
 
+        assert result.answers == ['hello', 'hello']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None
 
-def test_multi_answers():
-    class GreetingSkill(Skill):
-        def start(self, initial_message: str):
-            self.say("Hello")
-            self.say("How are you?")
+        result = skill.execute(messages=['bye'], state_name=None)
 
-    skill = GreetingSkill()
-    assert skill.send("Hi") == SkillResult(answers=["Hello", "How are you?"], relevant=True) and skill.finished
+        assert result.answers == ['bye', 'bye']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None
 
+    def test_ask(self):
 
-def test_stop_exception():
-    class EchoSkill(Skill):
-        def start(self, initial_message: str):
-            self.say(initial_message)
+        class MeetingSkill(BaseSkill):
+            def start(self, message: str):
+                name = self.ask('What is your name?')
+                self.say(f'Nice to meet you {name}!')
 
-    skill = EchoSkill()
-    skill.send("Hi")
-    try:
-        skill.send("Hi")
-        assert False, f"Expected {StopIteration.__name__}"
-    except StopIteration:
-        assert True
+        skill = MeetingSkill()
 
+        result = skill.execute(messages=['hello'], state_name=None)
 
-def test_ask():
-    class AgeSkill(Skill):
-        def start(self, initial_message: str):
-            age = self.ask("How old are you?")
-            self.say(f"You are {age} years old!")
+        assert result.answers == ['What is your name?']
+        assert result.is_relevant
+        assert not result.is_finished
+        assert result.direct_to_state is None
 
-    skill = AgeSkill()
-    assert skill.send("Hi") == SkillResult(answers=["How old are you?"], relevant=True) and not skill.finished
-    assert skill.send("42") == SkillResult(answers=["You are 42 years old!"], relevant=True) and skill.finished
+        result = skill.execute(messages=['hello', 'Bob'], state_name=None)
 
+        assert result.answers == ['Nice to meet you Bob!']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None
 
-def test_ask_with_direct_to():
-    class AgeSkill(Skill):
-        def start(self, initial_message: str):
-            self.ask("How old are you?", direct_to=self.wait_age)
+    def test_ask_with_direct_to_state(self):
 
-        def wait_age(self, age: str):
-            self.say(f"You are {age} years old!")
+        class MeetingSkillWithStates(BaseSkill):
 
-    skill = AgeSkill()
-    assert skill.send("Hi") == SkillResult(answers=["How old are you?"], relevant=True) and not skill.finished
-    assert skill.send("42") == SkillResult(answers=["You are 42 years old!"], relevant=True) and skill.finished
+            def start(self, message: str):
+                self.ask('What is your name?', direct_to_state='meeting')
 
+            def meeting(self, name: str):
+                self.say(f'Nice to meet you {name}!')
 
-def test_specify():
-    class AgeSkill(Skill):
-        def start(self, initial_message: str):
-            age = self.ask("How old are you?")
-            try:
-                age = int(age)
-            except:
-                age = self.specify("Incorrect age. Repeat pls.")
-            self.say(f"You are {age} years old!")
+        skill = MeetingSkillWithStates()
 
-    skill = AgeSkill()
-    assert skill.send("Hi") == SkillResult(answers=["How old are you?"], relevant=True) and not skill.finished
-    assert skill.send("I don't know!") == SkillResult(answers=["Incorrect age. Repeat pls."], relevant=False) and not skill.finished
-    assert skill.send("42") == SkillResult(answers=["You are 42 years old!"], relevant=True) and skill.finished
+        result = skill.execute(messages=['hello'], state_name=None)
 
+        assert result.answers == ['What is your name?']
+        assert result.is_relevant
+        assert not result.is_finished
+        assert result.direct_to_state == 'meeting'
 
-def test_specify_with_direct_to():
-    class AgeSkill(Skill):
-        def start(self, initial_message: str):
-            self.ask("How old are you?", direct_to=self.waiting_age)
+        result = skill.execute(messages=['Bob'], state_name='meeting')
 
-        def waiting_age(self, age: str):
-            try:
-                age = int(age)
-            except:
-                age = self.specify("Incorrect age. Repeat pls.")
-            self.say(f"You are {age} years old!")
+        assert result.answers == ['Nice to meet you Bob!']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None
 
-    skill = AgeSkill()
-    assert skill.send("Hi") == SkillResult(answers=["How old are you?"], relevant=True) and not skill.finished
-    assert skill.send("I don't know!") == SkillResult(answers=["Incorrect age. Repeat pls."], relevant=False) and not skill.finished
-    assert skill.send("42") == SkillResult(answers=["You are 42 years old!"], relevant=True) and skill.finished
+    def test_specify(self):
 
+        class AgeSkill(BaseSkill):
+            def start(self, message: str):
+                try:
+                    age = int(message)
+                except ValueError:
+                    age = self.specify(question='Are you sure?')
 
-def test_persistent_initial_message():
-    class FriendNameSkill(Skill):
-        def start(self, initial_message: str):
-            self.say(f"Nice to meet you {initial_message}!")
-            friend_name = self.ask("What's your friend's name?")
-            self.say(f"Your friend is {friend_name}!")
+                self.say(f'You are {age} years old')
 
-    skill = FriendNameSkill()
-    assert skill.send("Bob") == SkillResult(answers=["Nice to meet you Bob!", "What's your friend's name?"], relevant=True) and not skill.finished
-    assert skill.send("Alice") == SkillResult(answers=["Your friend is Alice!"], relevant=True) and skill.finished
+        skill = AgeSkill()
 
+        result = skill.execute(messages=['twenty four'], state_name=None)
 
-def test_reset():
-    class EchoSkill(Skill):
-        def start(self, initial_message: str):
-            self.say(initial_message)
+        assert result.answers == ['Are you sure?']
+        assert not result.is_relevant
+        assert not result.is_finished
+        assert result.direct_to_state is None
 
-    skill = EchoSkill()
-    assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=True) and skill.finished
+        result = skill.execute(messages=['twenty four', '24'], state_name=None)
 
-    skill.reset()
-    assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=True) and skill.finished
+        assert result.answers == ['You are 24 years old']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None
 
+    def test_specify_with_direct_to_state(self):
 
-def test_restart():
-    class RestartSkill(Skill):
-        def start(self, initial_message: str):
-            self.say('Start')
-            self.ask('Continue?', direct_to=self.waiting_answer)
+        class AgeSkillWithDirectTo(BaseSkill):
+            def start(self, message: str):
+                try:
+                    age = int(message)
+                except ValueError:
+                    self.specify(question='Are you sure?', direct_to_state='start')
 
-        def waiting_answer(self, answer: str):
-            if answer == 'Yes':
-                self.restart(initial_message=answer)
-            else:
-                self.say('Bye')
+                self.say(f'You are {age} years old')
 
-    skill = RestartSkill()
-    assert skill.send("Hi") == SkillResult(answers=["Start", "Continue?"], relevant=True) and not skill.finished
-    assert skill.send("Yes") == SkillResult(answers=["Start", "Continue?"], relevant=True) and not skill.finished
-    assert skill.send("No") == SkillResult(answers=["Bye"], relevant=True) and skill.finished
+        skill = AgeSkillWithDirectTo()
 
+        result = skill.execute(messages=['twenty four'], state_name=None)
 
-def test_retry():
-    class RestartSkill(Skill):
-        def start(self, initial_message: str):
-            self.say('Start')
-            self.ask('Continue?', direct_to=self.waiting_answer)
+        assert result.answers == ['Are you sure?']
+        assert not result.is_relevant
+        assert not result.is_finished
+        assert result.direct_to_state is 'start'
 
-        def waiting_answer(self, answer: str):
-            if answer == 'Yes':
-                self.restart(initial_message=answer)
-            elif answer == "No":
-                self.say('Bye')
-            else:
-                self.retry(initial_message=answer)
+        result = skill.execute(messages=['24'], state_name=None)
 
-    skill = RestartSkill()
-    assert skill.send("Hi") == SkillResult(answers=["Start", "Continue?"], relevant=True) and not skill.finished
-    assert skill.send("I don't know") == SkillResult(answers=["Start", "Continue?"], relevant=False) and not skill.finished
-    assert skill.send("No") == SkillResult(answers=["Bye"], relevant=True) and skill.finished
-
-
-def test_finish():
-    class EchoSkill(Skill):
-        def start(self, initial_message: str):
-            self.foo(initial_message)
-
-        def foo(self, message: str):
-            self.finish(message)
-
-    skill = EchoSkill()
-    assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=True) and skill.finished
-
-
-def test_abort():
-    class EchoSkill(Skill):
-        def start(self, initial_message: str):
-            self.foo(initial_message)
-
-        def foo(self, message: str):
-            self.abort(message)
-
-    skill = EchoSkill()
-    assert skill.send("Hi") == SkillResult(answers=["Hi"], relevant=False) and skill.finished
-
-
-def test_number_of_starts():
-    class AgeSkill(Skill):
-        def __init__(self):
-            self.number_of_starts = 0
-            super().__init__()
-
-        def start(self, initial_message: str):
-            self.number_of_starts += 1
-            age = self.ask("How old are you?")
-            self.say(f"You are {age} years old!")
-
-    skill = AgeSkill()
-    skill.send("Hi")
-    assert skill.number_of_starts == 1
-    skill.send("42")
-    assert skill.number_of_starts == 2
-
-
-def test_any_message_format():
-    class EchoSkill(Skill):
-        def start(self, initial_message: Any):
-            self.say(initial_message)
-
-    skill = EchoSkill()
-
-    message = {"message": "Hi", "button": None}
-    result = skill.send(message)
-
-    assert result.answers == [message]
-    assert result.relevant
-    assert skill.finished
+        assert result.answers == ['You are 24 years old']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None

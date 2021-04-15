@@ -1,146 +1,114 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Callable, Any
+from typing import Any, List, Optional
 
 
 class SkillSignal(Exception):
-    pass
 
-
-class IterationSignal(SkillSignal):
-    def __init__(self, *, relevant: bool):
-        self.relevant = relevant
-
-
-class RestartIterationSignal(IterationSignal):
-    pass
-
-
-class FinishIterationSignal(IterationSignal):
-    pass
+    def __init__(self, is_relevant: bool, direct_to_state: Optional[str]) -> None:
+        self.is_relevant = is_relevant
+        self.direct_to_state = direct_to_state
 
 
 class SkillResult:
-    def __init__(self, *, answers: List[Any], relevant: bool):
+
+    def __init__(
+        self,
+        answers: List[Any],
+        is_relevant: bool,
+        is_finished: bool,
+        direct_to_state: Optional[str],
+    ) -> None:
         self.answers = answers
-        self.relevant = relevant
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}(answers={self.answers}, relevant={self.relevant})"
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.answers == other.answers and self.relevant == other.relevant
+        self.is_relevant = is_relevant
+        self.is_finished = is_finished
+        self.direct_to_state = direct_to_state
 
 
-class Skill(ABC):
+class BaseSkill(ABC):
+
     def __init__(self):
-        self._finished = False
-        self._context = {}
-        self._expected_question_key = None
-        self._current_state = self.start
-        self._initial_message = None
-        self.global_context = None
+        self._messages = []
         self._answers = []
-
-    def reset(self) -> None:
-        self._finished = False
-        self._context = {}
-        self._expected_question_key = None
-        self._current_state = self.start
-        self._initial_message = None
-
-    def restart(self, initial_message: Any):
-        self._restart(initial_message=initial_message, relevant=True)
-
-    def retry(self, initial_message: Any):
-        self._restart(initial_message=initial_message, relevant=False)
-
-    def _restart(self, *, initial_message: Any, relevant: bool):
-        self.reset()
-        self._initial_message = initial_message
-        raise RestartIterationSignal(relevant=relevant)
-
-    def __eq__(self, other):
-        return (
-            isinstance(other, self.__class__)
-            and self._finished == other._finished
-            and self._context == other._context
-            and self._expected_question_key == other._expected_question_key
-            and self._current_state.__name__ == other._current_state.__name__
-            and self._initial_message == other._initial_message
-        )
-
-    @property
-    def finished(self) -> bool:
-        return self._finished
+        self._initial_state_name = 'start'
 
     @abstractmethod
-    def start(self, initial_message: Any):
+    def start(self, message: Any):
         pass
 
-    def say(self, message: Any):
+    @property
+    def _is_silent_mood(self):
+        return bool(self._messages)
+
+    def say(self, message: Any) -> None:
         self._have_new_message(message=message)
 
     def _have_new_message(self, *, message: Any):
-        message_str = str(message)
-        if message_str in self._context:
+        if self._is_silent_mood:
             return
-        self._context[message_str] = None
+
         self._answers.append(message)
 
-    def ask(self, question: Any, direct_to: Optional[Callable] = None) -> Any:
-        return self._need_new_message(question=question, direct_to=direct_to, relevant=True)
-
-    def specify(self, question: Any, direct_to: Optional[Callable] = None):
-        return self._need_new_message(question=question, direct_to=direct_to, relevant=False)
-
-    def _need_new_message(self, *, question: Any, direct_to: Optional[Callable], relevant: bool) -> Any:
+    def ask(self, question: Any, direct_to_state: Optional[str] = None) -> Any:
         self._have_new_message(message=question)
-        if direct_to:
-            self._context = {}
-            self._current_state = direct_to
-            self._initial_message = None
-        else:
-            if question in self._context:
-                answer = self._context[question]
-                if answer is not None:
-                    return answer
-            self._expected_question_key = question
-        raise FinishIterationSignal(relevant=relevant)
+        return self._need_new_message(
+            is_relevant=True,
+            direct_to_state=direct_to_state,
+        )
 
-    def _exit(self, *, message: Any, relevant: bool):
-        self._have_new_message(message=message)
-        self.reset()
-        self._finished = True
-        self._current_state = None
-        raise FinishIterationSignal(relevant=relevant)
+    def specify(self, question: Any, direct_to_state: Optional[str] = None) -> Any:
+        self._have_new_message(message=question)
+        return self._need_new_message(
+            is_relevant=False,
+            direct_to_state=direct_to_state,
+        )
 
-    def finish(self, message: Any):
-        self._exit(message=message, relevant=True)
+    def _need_new_message(self, is_relevant: bool, direct_to_state: Optional[str]) -> Any:
+        if self._is_silent_mood:
+            message = self._messages.pop(0)
+            return message
 
-    def abort(self, reason: Any):
-        self._exit(message=reason, relevant=False)
+        raise SkillSignal(
+            is_relevant=is_relevant,
+            direct_to_state=direct_to_state,
+        )
 
-    def send(self, message: Any):
-        if self.finished:
-            raise StopIteration
-
-        if self._expected_question_key:
-            self._context[self._expected_question_key] = message
-            self._expected_question_key = None
-
+    def execute(self, messages: List[Any], state_name: Optional[str]) -> SkillResult:
+        self._messages = messages
         self._answers = []
-        relevant = True
 
-        self._initial_message = self._initial_message or message
+        initial_message = self._messages.pop(0)
 
-        while True:
-            try:
-                self._current_state(self._initial_message)
-                self._finished = True
-                break
-            except IterationSignal as signal:
-                relevant &= signal.relevant
-                if isinstance(signal, FinishIterationSignal):
-                    break
+        if not state_name:
+            state_name = self._initial_state_name
 
-        return SkillResult(answers=self._answers, relevant=relevant)
+        state = getattr(self, state_name)
+
+        is_finished = False
+        is_relevant = True
+        direct_to_state = None
+
+        try:
+            state(initial_message)
+            is_finished = True
+        except SkillSignal as signal:
+            is_relevant = signal.is_relevant
+            direct_to_state = signal.direct_to_state
+
+        return SkillResult(
+            answers=self._answers,
+            is_relevant=is_relevant,
+            is_finished=is_finished,
+            direct_to_state=direct_to_state,
+        )
+
+
+class BaseSkillClassifier(ABC):
+
+    @property
+    @abstractmethod
+    def skills_map(self) -> dict[str, BaseSkill]:
+        pass
+
+    @abstractmethod
+    def classify(self, message: Any) -> List[str]:
+        pass

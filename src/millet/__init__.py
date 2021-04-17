@@ -1,5 +1,4 @@
-from .agent import Agent
-from .agent import Conversation
-from .skill import Skill
+from .agent import Agent, Conversation
+from .skill import BaseSkill
 
-__version__ = "0.2.0"
+__version__ = '1.0.0'

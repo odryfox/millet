@@ -27,7 +27,7 @@ class SkillResult:
 class BaseSkill(ABC):
 
     def __init__(self):
-        self._messages = []
+        self._history = []
         self._answers = []
         self._initial_state_name = 'start'
 
@@ -37,7 +37,7 @@ class BaseSkill(ABC):
 
     @property
     def _is_silent_mood(self):
-        return bool(self._messages)
+        return bool(self._history)
 
     def say(self, message: Any) -> None:
         self._have_new_message(message=message)
@@ -64,7 +64,7 @@ class BaseSkill(ABC):
 
     def _need_new_message(self, is_relevant: bool, direct_to_state: Optional[str]) -> Any:
         if self._is_silent_mood:
-            message = self._messages.pop(0)
+            message = self._history.pop(0)
             return message
 
         raise SkillSignal(
@@ -72,11 +72,13 @@ class BaseSkill(ABC):
             direct_to_state=direct_to_state,
         )
 
-    def execute(self, messages: List[Any], state_name: Optional[str]) -> SkillResult:
-        self._messages = messages
+    def execute(self, message: Any, history: List[Any], state_name: Optional[str]) -> SkillResult:
+        self._history = history
+        self._history.append(message)
+
         self._answers = []
 
-        initial_message = self._messages.pop(0)
+        initial_message = self._history.pop(0)
 
         if not state_name:
             state_name = self._initial_state_name

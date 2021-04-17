@@ -11,14 +11,14 @@ class TestSkill:
 
         skill = EchoSkill()
 
-        result = skill.execute(messages=['hello'], state_name=None)
+        result = skill.execute(message='hello', history=[], state_name=None)
 
         assert result.answers == ['hello']
         assert result.is_relevant
         assert result.is_finished
         assert result.direct_to_state is None
 
-        result = skill.execute(messages=['bye'], state_name=None)
+        result = skill.execute(message='bye', history=[], state_name=None)
 
         assert result.answers == ['bye']
         assert result.is_relevant
@@ -34,14 +34,14 @@ class TestSkill:
 
         skill = DoubleEchoSkill()
 
-        result = skill.execute(messages=['hello'], state_name=None)
+        result = skill.execute(message='hello', history=[], state_name=None)
 
         assert result.answers == ['hello', 'hello']
         assert result.is_relevant
         assert result.is_finished
         assert result.direct_to_state is None
 
-        result = skill.execute(messages=['bye'], state_name=None)
+        result = skill.execute(message='bye', history=[], state_name=None)
 
         assert result.answers == ['bye', 'bye']
         assert result.is_relevant
@@ -57,14 +57,14 @@ class TestSkill:
 
         skill = MeetingSkill()
 
-        result = skill.execute(messages=['hello'], state_name=None)
+        result = skill.execute(message='hello', history=[], state_name=None)
 
         assert result.answers == ['What is your name?']
         assert result.is_relevant
         assert not result.is_finished
         assert result.direct_to_state is None
 
-        result = skill.execute(messages=['hello', 'Bob'], state_name=None)
+        result = skill.execute(message='Bob', history=['hello'], state_name=None)
 
         assert result.answers == ['Nice to meet you Bob!']
         assert result.is_relevant
@@ -83,14 +83,14 @@ class TestSkill:
 
         skill = MeetingSkillWithStates()
 
-        result = skill.execute(messages=['hello'], state_name=None)
+        result = skill.execute(message='hello', history=[], state_name=None)
 
         assert result.answers == ['What is your name?']
         assert result.is_relevant
         assert not result.is_finished
         assert result.direct_to_state == 'meeting'
 
-        result = skill.execute(messages=['Bob'], state_name='meeting')
+        result = skill.execute(message='Bob', history=[], state_name='meeting')
 
         assert result.answers == ['Nice to meet you Bob!']
         assert result.is_relevant
@@ -110,14 +110,14 @@ class TestSkill:
 
         skill = AgeSkill()
 
-        result = skill.execute(messages=['twenty four'], state_name=None)
+        result = skill.execute(message='twenty four', history=[], state_name=None)
 
         assert result.answers == ['Are you sure?']
         assert not result.is_relevant
         assert not result.is_finished
         assert result.direct_to_state is None
 
-        result = skill.execute(messages=['twenty four', '24'], state_name=None)
+        result = skill.execute(message='24', history=['twenty four'], state_name=None)
 
         assert result.answers == ['You are 24 years old']
         assert result.is_relevant
@@ -137,14 +137,14 @@ class TestSkill:
 
         skill = AgeSkillWithDirectTo()
 
-        result = skill.execute(messages=['twenty four'], state_name=None)
+        result = skill.execute(message='twenty four', history=[], state_name=None)
 
         assert result.answers == ['Are you sure?']
         assert not result.is_relevant
         assert not result.is_finished
         assert result.direct_to_state is 'start'
 
-        result = skill.execute(messages=['24'], state_name=None)
+        result = skill.execute(message='24', history=[], state_name='start')
 
         assert result.answers == ['You are 24 years old']
         assert result.is_relevant

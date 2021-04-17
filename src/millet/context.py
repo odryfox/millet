@@ -10,7 +10,7 @@ Redis = TypeVar('Redis')
 class UserContext:
     skill_names:  List[str]
     state_names: List[Optional[str]]
-    messages: List[Any]
+    history: List[Any]
 
 
 class BaseContextManager(ABC):
@@ -25,7 +25,7 @@ class BaseContextManager(ABC):
 
     @property
     def _empty_user_context(self) -> UserContext:
-        return UserContext(skill_names=[], state_names=[], messages=[])
+        return UserContext(skill_names=[], state_names=[], history=[])
 
 
 class RAMContextManager(BaseContextManager):

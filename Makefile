@@ -5,4 +5,7 @@ docs_deploy:
 	mkdocs  gh-deploy
 
 isort:
-	PYTHONPATH=src/ isort src/ -m=3
+	PYTHONPATH=src/ isort src/ -m=3 && PYTHONPATH=examples/ isort examples/ -m=3
+
+test:
+	python -m pytest examples && pytest --cov=millet

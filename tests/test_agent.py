@@ -1,296 +1,293 @@
-from typing import List, Type
+from typing import Any, List
+from unittest import mock
 
-import pytest
-from redis import Redis
+from millet import Conversation, Agent, BaseSkill
+from millet.skill import BaseSkillClassifier
 
-from millet import Agent, Skill
-from millet.agent import BaseSkillClassifier
-from millet.context import RAMAgentContext, RedisAgentContext
 
+class TestConversation:
 
-def test_answer_agent(bob_id: str):
-    class EchoSkill(Skill):
-        def start(self, initial_message: str):
-            self.say(initial_message)
+    default_user_id = 'bob'
 
-    def skill_classifier(message: str) -> List[Skill]:
-        return [EchoSkill()]
+    def test_query(self):
+        message = 'hello'
+        agent = mock.Mock(spec=Agent)
 
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
+        conversation = Conversation(agent=agent, user_id=self.default_user_id)
+        conversation.query(message=message)
 
-    assert conversation.query("Hello") == ["Hello"]
+        agent.query.assert_called_once_with(message=message, user_id=self.default_user_id)
 
 
-def test_incorrect_skill_classifier():
-    with pytest.raises(TypeError):
-        Agent(skill_classifier=None)
+class TestAgent:
 
+    default_user_id = 'bob'
 
-def test_choice_of_skills(bob_id: str):
-    class GreetingSkill(Skill):
-        def start(self, initial_message: str):
-            self.say("Hi")
+    def test_query(self):
 
-    class PartingSkill(Skill):
-        def start(self, initial_message: str):
-            self.say("Bye")
+        class EchoSkill(BaseSkill):
+            def start(self, message: str):
+                self.say(message)
 
-    def skill_classifier(message: str) -> List[Skill]:
-        skills = []
+        skill = EchoSkill()
 
-        if "Hello" in message:
-            skills.append(GreetingSkill())
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> dict[str, BaseSkill]:
+                return {
+                    'echo': skill,
+                }
 
-        if "Goodbye" in message:
-            skills.append(PartingSkill())
+            def classify(self, message: Any) -> List[str]:
+                return ['echo']
 
-        return skills
+        skill_classifier = SkillClassifier()
 
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
+        agent = Agent(skill_classifier=skill_classifier)
 
-    assert conversation.query("Hello") == ["Hi"]
-    assert conversation.query("Goodbye") == ["Bye"]
-    assert conversation.query("How are you?") == []
+        answers = agent.query(message='hello', user_id=self.default_user_id)
+        assert answers == ['hello']
 
+    def test_conversation_with_user(self):
 
-def test_choice_of_many_skills(bob_id: str):
-    class GreetingSkill(Skill):
-        def start(self, initial_message: str):
-            self.say("Hello")
+        class EchoSkill(BaseSkill):
+            def start(self, message: str):
+                self.say(message)
 
-    class IntroduceYourselfSkill(Skill):
-        def start(self, initial_message: str):
-            self.say("It's me")
+        skill = EchoSkill()
 
-    def skill_classifier(message: str) -> List[Skill]:
-        skills = [GreetingSkill(), IntroduceYourselfSkill()]
-        return skills
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> dict[str, BaseSkill]:
+                return {
+                    'echo': skill,
+                }
 
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
+            def classify(self, message: Any) -> List[str]:
+                return ['echo']
 
-    assert conversation.query("Hello") == ["Hello", "It's me"]
+        skill_classifier = SkillClassifier()
 
+        agent = Agent(skill_classifier=skill_classifier)
+        conversation = agent.conversation_with_user(self.default_user_id)
 
-def test_class_skill_classifier(bob_id: str):
-    class GreetingSkill(Skill):
-        def start(self, initial_message: str):
-            self.say("Hi")
+        assert conversation.agent == agent
+        assert conversation.user_id == self.default_user_id
 
-    class PartingSkill(Skill):
-        def start(self, initial_message: str):
-            self.say("Bye")
+    def test_query_with_ask(self):
 
-    class SkillClassifier(BaseSkillClassifier):
-        def __init__(self, hello_phrase: str, goodbye_phrase: str):
-            self.hello_phrase = hello_phrase
-            self.goodbye_phrase = goodbye_phrase
+        class MeetingSkill(BaseSkill):
+            def start(self, message: str):
+                name = self.ask('What is your name?')
+                self.say(f'Nice to meet you {name}!')
 
-        def classify(self, message: str) -> List[Skill]:
-            skills = []
+        skill = MeetingSkill()
 
-            if self.hello_phrase in message:
-                skills.append(GreetingSkill())
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> dict[str, BaseSkill]:
+                return {
+                    'meeting': skill,
+                }
 
-            if self.goodbye_phrase in message:
-                skills.append(PartingSkill())
+            def classify(self, message: Any) -> List[str]:
+                return ['meeting']
 
-            return skills
+        skill_classifier = SkillClassifier()
 
-    skill_classifier = SkillClassifier(
-        hello_phrase="Hello",
-        goodbye_phrase="Goodbye",
-    )
+        agent = Agent(skill_classifier=skill_classifier)
 
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
+        answers = agent.query(message='hello', user_id=self.default_user_id)
+        assert answers == ['What is your name?']
 
-    assert conversation.query("Hello") == ["Hi"]
-    assert conversation.query("Goodbye") == ["Bye"]
-    assert conversation.query("How are you?") == []
+        answers = agent.query(message='Bob', user_id=self.default_user_id)
+        assert answers == ['Nice to meet you Bob!']
 
+    def test_ask_with_direct_to_state(self):
 
-def test_separation_context_on_users(bob_id: str, alice_id: str, meeting_agent: Agent):
-    conversation_with_bob = meeting_agent.conversation_with_user(bob_id)
-    conversation_with_alice = meeting_agent.conversation_with_user(alice_id)
+        class MeetingSkillWithStates(BaseSkill):
 
-    assert conversation_with_bob.query("Hello") == ["What is your name?"]
-    assert conversation_with_alice.query("Hello") == ["What is your name?"]
+            def start(self, message: str):
+                self.ask('What is your name?', direct_to_state='meeting')
 
-    assert conversation_with_bob.query("Bob") == ["Nice to meet you Bob!"]
-    assert conversation_with_alice.query("Alice") == ["Nice to meet you Alice!"]
+            def meeting(self, name: str):
+                self.say(f'Nice to meet you {name}!')
 
+        skill = MeetingSkillWithStates()
 
-def test_query_without_conversation(bob_id: str, meeting_agent: Agent):
-    assert meeting_agent.query("Hello", bob_id) == ["What is your name?"]
-    assert meeting_agent.query("Bob", bob_id) == ["Nice to meet you Bob!"]
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> dict[str, BaseSkill]:
+                return {
+                    'meeting': skill,
+                }
 
+            def classify(self, message: Any) -> List[str]:
+                return ['meeting']
 
-def test_multi_answers(bob_id: str):
-    class MoodSkill(Skill):
-        def start(self, initial_message: str):
-            self.say("Hello")
-            self.say("Good day!")
-            self.ask("How are you?", direct_to=self.waiting_mood)
+        skill_classifier = SkillClassifier()
 
-        def waiting_mood(self, mood: str):
-            self.say("Goodbye")
+        agent = Agent(skill_classifier=skill_classifier)
 
-    def skill_classifier(message: str) -> List[Skill]:
-        return [MoodSkill()]
+        answers = agent.query(message='hello', user_id=self.default_user_id)
+        assert answers == ['What is your name?']
 
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
+        answers = agent.query(message='Bob', user_id=self.default_user_id)
+        assert answers == ['Nice to meet you Bob!']
 
-    assert conversation.query("Hello") == ["Hello", "Good day!", "How are you?"]
+    def test_query_with_specify(self):
 
+        class AgeSkill(BaseSkill):
+            def start(self, message: str):
+                age = self.ask('How old are you?')
 
-def test_continuous_conversation(bob_id: str, meeting_agent: Agent):
-    conversation = meeting_agent.conversation_with_user(bob_id)
+                try:
+                    age = int(age)
+                except ValueError:
+                    age = self.specify(question='Send a number pls')
 
-    assert conversation.query("Hello") == ["What is your name?"]
-    assert conversation.query("Bob") == ["Nice to meet you Bob!"]
+                self.say(f'You are {age} years old')
 
+        skill = AgeSkill()
 
-def test_ram_persistent_continuous_conversation(bob_id: str, meeting_skill_class: Agent):
-    def skill_classifier(message: str) -> List[Skill]:
-        skills = []
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> dict[str, BaseSkill]:
+                return {
+                    'age': skill,
+                }
 
-        if "Hello" in message:
-            skills.append(meeting_skill_class())
+            def classify(self, message: Any) -> List[str]:
+                skill_names = []
+                if 'age' in message:
+                    skill_names.append('age')
+                return skill_names
 
-        return skills
+        skill_classifier = SkillClassifier()
 
-    agent = Agent(skill_classifier=skill_classifier, context=RAMAgentContext())
-    conversation = agent.conversation_with_user(bob_id)
-    assert conversation.query("Hello") == ["What is your name?"]
+        agent = Agent(skill_classifier=skill_classifier)
 
-    agent = Agent(skill_classifier=skill_classifier, context=RAMAgentContext())
-    conversation = agent.conversation_with_user(bob_id)
-    assert conversation.query("Bob") == []
+        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        assert answers == ['How old are you?']
 
+        answers = agent.query(message='twenty four', user_id=self.default_user_id)
+        assert answers == ['Send a number pls']
 
-def test_redis_persistent_continuous_conversation(bob_id: str, redis: Redis, age_skill_class: Type[Skill]):
-    def skill_classifier(message: str) -> List[Skill]:
-        skills = []
+        answers = agent.query(message='24', user_id=self.default_user_id)
+        assert answers == ['You are 24 years old']
 
-        if "age" in message:
-            skills.append(age_skill_class())
+    def test_query_with_specify_with_direct_to_state(self):
 
-        return skills
+        class AgeSkillWithDirectTo(BaseSkill):
+            def start(self, message: str):
+                age = self.ask('How old are you?')
+                self.wait_age(age)
 
-    agent = Agent(skill_classifier=skill_classifier, context=RedisAgentContext(redis=redis))
-    conversation = agent.conversation_with_user(bob_id)
-    assert conversation.query("What about age?") == ["How old are you?"]
+            def wait_age(self, age: str):
+                try:
+                    age = int(age)
+                except ValueError:
+                    self.specify(question='Send a number pls', direct_to_state='wait_age')
 
-    agent = Agent(skill_classifier=skill_classifier, context=RedisAgentContext(redis=redis))
-    conversation = agent.conversation_with_user(bob_id)
-    assert conversation.query("42") == ["Ok"]
+                self.say(f'You are {age} years old')
 
+        skill = AgeSkillWithDirectTo()
 
-def test_default_context():
-    agent = Agent(skill_classifier=lambda message: [])
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> dict[str, BaseSkill]:
+                return {
+                    'age': skill,
+                }
 
-    assert isinstance(agent.context, RAMAgentContext)
+            def classify(self, message: Any) -> List[str]:
+                skill_names = []
+                if 'age' in message:
+                    skill_names.append('age')
+                return skill_names
 
+        skill_classifier = SkillClassifier()
 
-def test_global_context_change_in_skill(bob_id: str):
-    class AgeSkill(Skill):
-        def start(self, initial_message: str):
-            age = self.global_context.get("age")
-            if not age:
-                self.ask("How old are you?", direct_to=self.waiting_age)
-            self.say(f"You are {age} years old")
+        agent = Agent(skill_classifier=skill_classifier)
 
-        def waiting_age(self, age: str):
-            self.global_context["age"] = age
-            self.say(f"You are {age} years old")
+        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        assert answers == ['How old are you?']
 
-    def skill_classifier(message: str) -> List[Skill]:
-        skills = []
+        answers = agent.query(message='twenty four', user_id=self.default_user_id)
+        assert answers == ['Send a number pls']
 
-        if "age" in message:
-            skills.append(AgeSkill())
+        answers = agent.query(message='TWENTY FOUR', user_id=self.default_user_id)
+        assert answers == ['Send a number pls']
 
-        return skills
+        answers = agent.query(message='24', user_id=self.default_user_id)
+        assert answers == ['You are 24 years old']
 
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
+    def test_multi_skills(self):
 
-    assert conversation.query("What about age?") == ["How old are you?"]
-    assert conversation.query("42") == ["You are 42 years old"]
-    assert conversation.query("What about age") == ["You are 42 years old"]
+        class EchoSkill(BaseSkill):
+            def start(self, message: str):
+                self.say(message)
 
+        skill = EchoSkill()
 
-def test_specify(bob_id: str, age_skill_class: Type[Skill]):
-    def skill_classifier(message: str) -> List[Skill]:
-        skills = []
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> dict[str, BaseSkill]:
+                return {
+                    'echo': skill,
+                }
 
-        if "age" in message:
-            skills.append(age_skill_class())
+            def classify(self, message: Any) -> List[str]:
+                return ['echo', 'echo']
 
-        return skills
+        skill_classifier = SkillClassifier()
 
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
+        agent = Agent(skill_classifier=skill_classifier)
 
-    assert conversation.query("What about age?") == ["How old are you?"]
-    assert conversation.query("Forty two") == ["Incorrect age: expected number, repeat pls"]
-    assert conversation.query("42") == ["Ok"]
+        answers = agent.query(message='hello', user_id=self.default_user_id)
+        assert answers == ['hello', 'hello']
 
+    def test_multi_skills_and_one_continuously(self):
 
-def test_move_to_new_skill_when_specify(bob_id: str, age_skill_class: Type[Skill], meeting_skill_class: Type[Skill]):
-    def skill_classifier(message: str) -> List[Skill]:
-        skills = []
+        class EchoSkill(BaseSkill):
+            def start(self, message: str):
+                self.say(message)
 
-        if "age" in message:
-            skills.append(age_skill_class())
+        class AgeSkill(BaseSkill):
+            def start(self, message: str):
+                age = self.ask('How old are you?')
 
-        if "Hello" in message:
-            skills.append(meeting_skill_class())
+                try:
+                    age = int(age)
+                except ValueError:
+                    age = self.specify(question='Send a number pls')
 
-        return skills
+                self.say(f'You are {age} years old')
 
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> dict[str, BaseSkill]:
+                return {
+                    'echo': EchoSkill(),
+                    'age': AgeSkill(),
+                }
 
-    assert conversation.query("What about age?") == ["How old are you?"]
-    assert conversation.query("Hello") == ["What is your name?"]
+            def classify(self, message: Any) -> List[str]:
+                skill_names = []
+                if 'age' in message:
+                    skill_names.append('echo')
+                    skill_names.append('age')
+                return skill_names
 
+        skill_classifier = SkillClassifier()
 
-def test_do_not_move_to_new_skill_when_not_specify(bob_id: str, age_skill_class: Type[Skill], meeting_skill_class: Type[Skill]):
-    def skill_classifier(message: str) -> List[Skill]:
-        skills = []
+        agent = Agent(skill_classifier=skill_classifier)
 
-        if "age" in message:
-            skills.append(age_skill_class())
+        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        assert answers == ['Ask me about age', 'How old are you?']
 
-        if "Hello" in message:
-            skills.append(meeting_skill_class())
+        answers = agent.query(message='twenty four', user_id=self.default_user_id)
+        assert answers == ['Send a number pls']
 
-        return skills
-
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
-
-    assert conversation.query("Hello") == ["What is your name?"]
-    assert conversation.query("What about age?") == ["Nice to meet you What about age?!"]
-
-
-def test_inline_ask(bob_id: str):
-    class MeetingSkill(Skill):
-        def start(self, initial_message: str):
-            self.say(f"Hello")
-            name = self.ask(question="What is your name?")
-            self.say(f"Nice to meet you {name}!")
-
-    def skill_classifier(message: str) -> List[Skill]:
-        return [MeetingSkill()]
-
-    agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user(bob_id)
-
-    assert conversation.query("Hello") == ["Hello", "What is your name?"]
-    assert conversation.query("Bob") == ["Nice to meet you Bob!"]
+        answers = agent.query(message='24', user_id=self.default_user_id)
+        assert answers == ['You are 24 years old']

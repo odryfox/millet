@@ -1,7 +1,7 @@
 from typing import Any, List
 from unittest import mock
 
-from millet import Conversation, Agent, BaseSkill
+from millet import Agent, BaseSkill, Conversation
 from millet.skill import BaseSkillClassifier
 
 

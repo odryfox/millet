@@ -1,8 +1,12 @@
 import pytest
 from redis import Redis
 
-from millet.context import UserContext, RAMContextManager, PickleSerializer, RedisContextManager
-
+from millet.context import (
+    PickleSerializer,
+    RAMContextManager,
+    RedisContextManager,
+    UserContext
+)
 
 _empty_user_context = UserContext(
     skill_names=[],

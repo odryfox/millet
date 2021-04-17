@@ -4,9 +4,9 @@ from typing import Any, List, Optional, Union
 
 class SkillSignal(Exception):
 
-    def __init__(self, is_relevant: bool, direct_to_state: Optional[str]) -> None:
+    def __init__(self, is_relevant: bool, direct_to: Optional[str]) -> None:
         self.is_relevant = is_relevant
-        self.direct_to_state = direct_to_state
+        self.direct_to = direct_to
 
 
 class SkillResult:
@@ -16,12 +16,12 @@ class SkillResult:
         answers: List[Any],
         is_relevant: bool,
         is_finished: bool,
-        direct_to_state: Optional[str],
+        direct_to: Optional[str],
     ) -> None:
         self.answers = answers
         self.is_relevant = is_relevant
         self.is_finished = is_finished
-        self.direct_to_state = direct_to_state
+        self.direct_to = direct_to
 
 
 class BaseSkill(ABC):
@@ -44,31 +44,31 @@ class BaseSkill(ABC):
 
         self._answers.append(message)
 
-    def ask(self, question: Any, direct_to_state: Optional[Union[str, callable]] = None) -> Any:
+    def ask(self, question: Any, direct_to: Optional[Union[str, callable]] = None) -> Any:
         self._have_new_message(message=question)
         return self._need_new_message(
             is_relevant=True,
-            direct_to_state=direct_to_state,
+            direct_to=direct_to,
         )
 
-    def specify(self, question: Any, direct_to_state: Optional[Union[str, callable]] = None) -> Any:
+    def specify(self, question: Any, direct_to: Optional[Union[str, callable]] = None) -> Any:
         self._have_new_message(message=question)
         return self._need_new_message(
             is_relevant=False,
-            direct_to_state=direct_to_state,
+            direct_to=direct_to,
         )
 
-    def _need_new_message(self, is_relevant: bool, direct_to_state: Optional[Union[str, callable]]) -> Any:
+    def _need_new_message(self, is_relevant: bool, direct_to: Optional[Union[str, callable]]) -> Any:
         if self._is_silent_mood:
             message = self._history.pop(0)
             return message
 
-        if callable(direct_to_state):
-            direct_to_state = direct_to_state.__name__
+        if callable(direct_to):
+            direct_to = direct_to.__name__
 
         raise SkillSignal(
             is_relevant=is_relevant,
-            direct_to_state=direct_to_state,
+            direct_to=direct_to,
         )
 
     def execute(self, message: Any, history: List[Any], state_name: Optional[str]) -> SkillResult:
@@ -86,20 +86,20 @@ class BaseSkill(ABC):
 
         is_finished = False
         is_relevant = True
-        direct_to_state = None
+        direct_to = None
 
         try:
             state(initial_message)
             is_finished = True
         except SkillSignal as signal:
             is_relevant = signal.is_relevant
-            direct_to_state = signal.direct_to_state
+            direct_to = signal.direct_to
 
         return SkillResult(
             answers=self._answers,
             is_relevant=is_relevant,
             is_finished=is_finished,
-            direct_to_state=direct_to_state,
+            direct_to=direct_to,
         )
 
 

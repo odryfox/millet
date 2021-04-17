@@ -16,14 +16,14 @@ class TestSkill:
         assert result.answers == ['hello']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
         result = skill.execute(message='bye', history=[], state_name=None)
 
         assert result.answers == ['bye']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
     def test_double_say(self):
 
@@ -39,14 +39,14 @@ class TestSkill:
         assert result.answers == ['hello', 'hello']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
         result = skill.execute(message='bye', history=[], state_name=None)
 
         assert result.answers == ['bye', 'bye']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
     def test_ask(self):
 
@@ -62,21 +62,21 @@ class TestSkill:
         assert result.answers == ['What is your name?']
         assert result.is_relevant
         assert not result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
         result = skill.execute(message='Bob', history=['hello'], state_name=None)
 
         assert result.answers == ['Nice to meet you Bob!']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
-    def test_ask_with_direct_to_state(self):
+    def test_ask_with_direct_to(self):
 
         class MeetingSkillWithStates(BaseSkill):
 
             def start(self, message: str):
-                self.ask('What is your name?', direct_to_state='meeting')
+                self.ask('What is your name?', direct_to='meeting')
 
             def meeting(self, name: str):
                 self.say(f'Nice to meet you {name}!')
@@ -88,21 +88,21 @@ class TestSkill:
         assert result.answers == ['What is your name?']
         assert result.is_relevant
         assert not result.is_finished
-        assert result.direct_to_state == 'meeting'
+        assert result.direct_to == 'meeting'
 
         result = skill.execute(message='Bob', history=[], state_name='meeting')
 
         assert result.answers == ['Nice to meet you Bob!']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
-    def test_ask_with_direct_to_callable_state(self):
+    def test_ask_with_direct_to_callable(self):
 
         class MeetingSkillWithStates(BaseSkill):
 
             def start(self, message: str):
-                self.ask('What is your name?', direct_to_state=self.meeting)
+                self.ask('What is your name?', direct_to=self.meeting)
 
             def meeting(self, name: str):
                 self.say(f'Nice to meet you {name}!')
@@ -114,14 +114,14 @@ class TestSkill:
         assert result.answers == ['What is your name?']
         assert result.is_relevant
         assert not result.is_finished
-        assert result.direct_to_state == 'meeting'
+        assert result.direct_to == 'meeting'
 
         result = skill.execute(message='Bob', history=[], state_name='meeting')
 
         assert result.answers == ['Nice to meet you Bob!']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
     def test_specify(self):
 
@@ -141,23 +141,23 @@ class TestSkill:
         assert result.answers == ['Are you sure?']
         assert not result.is_relevant
         assert not result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
         result = skill.execute(message='24', history=['twenty four'], state_name=None)
 
         assert result.answers == ['You are 24 years old']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
-    def test_specify_with_direct_to_state(self):
+    def test_specify_with_direct_to(self):
 
         class AgeSkillWithDirectTo(BaseSkill):
             def start(self, message: str):
                 try:
                     age = int(message)
                 except ValueError:
-                    self.specify(question='Are you sure?', direct_to_state='start')
+                    self.specify(question='Are you sure?', direct_to='start')
 
                 self.say(f'You are {age} years old')
 
@@ -168,23 +168,23 @@ class TestSkill:
         assert result.answers == ['Are you sure?']
         assert not result.is_relevant
         assert not result.is_finished
-        assert result.direct_to_state is 'start'
+        assert result.direct_to is 'start'
 
         result = skill.execute(message='24', history=[], state_name='start')
 
         assert result.answers == ['You are 24 years old']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
-    def test_specify_with_direct_to_callable_state(self):
+    def test_specify_with_direct_to_callable(self):
 
         class AgeSkillWithDirectTo(BaseSkill):
             def start(self, message: str):
                 try:
                     age = int(message)
                 except ValueError:
-                    self.specify(question='Are you sure?', direct_to_state=self.start)
+                    self.specify(question='Are you sure?', direct_to=self.start)
 
                 self.say(f'You are {age} years old')
 
@@ -195,14 +195,14 @@ class TestSkill:
         assert result.answers == ['Are you sure?']
         assert not result.is_relevant
         assert not result.is_finished
-        assert result.direct_to_state is 'start'
+        assert result.direct_to is 'start'
 
         result = skill.execute(message='24', history=[], state_name='start')
 
         assert result.answers == ['You are 24 years old']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
     def test_override_initial_state_name(self):
 
@@ -220,11 +220,11 @@ class TestSkill:
         assert result.answers == ['hello']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None
 
         result = skill.execute(message='bye', history=[], state_name='echo')
 
         assert result.answers == ['bye']
         assert result.is_relevant
         assert result.is_finished
-        assert result.direct_to_state is None
+        assert result.direct_to is None

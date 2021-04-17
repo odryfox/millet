@@ -103,12 +103,12 @@ class TestAgent:
         answers = agent.query(message='Bob', user_id=self.default_user_id)
         assert answers == ['Nice to meet you Bob!']
 
-    def test_ask_with_direct_to_state(self):
+    def test_ask_with_direct_to(self):
 
         class MeetingSkillWithStates(BaseSkill):
 
             def start(self, message: str):
-                self.ask('What is your name?', direct_to_state='meeting')
+                self.ask('What is your name?', direct_to='meeting')
 
             def meeting(self, name: str):
                 self.say(f'Nice to meet you {name}!')
@@ -176,7 +176,7 @@ class TestAgent:
         answers = agent.query(message='24', user_id=self.default_user_id)
         assert answers == ['You are 24 years old']
 
-    def test_query_with_specify_with_direct_to_state(self):
+    def test_query_with_specify_with_direct_to(self):
 
         class AgeSkillWithDirectTo(BaseSkill):
             def start(self, message: str):
@@ -187,7 +187,7 @@ class TestAgent:
                 try:
                     age = int(age)
                 except ValueError:
-                    self.specify(question='Send a number pls', direct_to_state='wait_age')
+                    self.specify(question='Send a number pls', direct_to='wait_age')
 
                 self.say(f'You are {age} years old')
 

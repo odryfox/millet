@@ -78,9 +78,9 @@ class Agent:
 
             if not skill_result.is_finished:
                 new_skill_names = [skill_name]
-                new_state_names = [skill_result.direct_to_state]
+                new_state_names = [skill_result.direct_to]
 
-                if skill_result.direct_to_state:
+                if skill_result.direct_to:
                     new_history = []
                 else:
                     new_history = history + [message]

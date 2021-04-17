@@ -28,9 +28,8 @@ class BaseSkill(ABC):
 
     INITIAL_STATE_NAME = 'start'
 
-    def __init__(self):
-        self._history = []
-        self._answers = []
+    _history = []
+    _answers = []
 
     @property
     def _is_silent_mood(self):

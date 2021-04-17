@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 
 class SkillSignal(Exception):
@@ -44,24 +44,27 @@ class BaseSkill(ABC):
 
         self._answers.append(message)
 
-    def ask(self, question: Any, direct_to_state: Optional[str] = None) -> Any:
+    def ask(self, question: Any, direct_to_state: Optional[Union[str, callable]] = None) -> Any:
         self._have_new_message(message=question)
         return self._need_new_message(
             is_relevant=True,
             direct_to_state=direct_to_state,
         )
 
-    def specify(self, question: Any, direct_to_state: Optional[str] = None) -> Any:
+    def specify(self, question: Any, direct_to_state: Optional[Union[str, callable]] = None) -> Any:
         self._have_new_message(message=question)
         return self._need_new_message(
             is_relevant=False,
             direct_to_state=direct_to_state,
         )
 
-    def _need_new_message(self, is_relevant: bool, direct_to_state: Optional[str]) -> Any:
+    def _need_new_message(self, is_relevant: bool, direct_to_state: Optional[Union[str, callable]]) -> Any:
         if self._is_silent_mood:
             message = self._history.pop(0)
             return message
+
+        if callable(direct_to_state):
+            direct_to_state = direct_to_state.__name__
 
         raise SkillSignal(
             is_relevant=is_relevant,

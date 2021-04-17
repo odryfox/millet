@@ -97,6 +97,32 @@ class TestSkill:
         assert result.is_finished
         assert result.direct_to_state is None
 
+    def test_ask_with_direct_to_callable_state(self):
+
+        class MeetingSkillWithStates(BaseSkill):
+
+            def start(self, message: str):
+                self.ask('What is your name?', direct_to_state=self.meeting)
+
+            def meeting(self, name: str):
+                self.say(f'Nice to meet you {name}!')
+
+        skill = MeetingSkillWithStates()
+
+        result = skill.execute(message='hello', history=[], state_name=None)
+
+        assert result.answers == ['What is your name?']
+        assert result.is_relevant
+        assert not result.is_finished
+        assert result.direct_to_state == 'meeting'
+
+        result = skill.execute(message='Bob', history=[], state_name='meeting')
+
+        assert result.answers == ['Nice to meet you Bob!']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None
+
     def test_specify(self):
 
         class AgeSkill(BaseSkill):
@@ -132,6 +158,33 @@ class TestSkill:
                     age = int(message)
                 except ValueError:
                     self.specify(question='Are you sure?', direct_to_state='start')
+
+                self.say(f'You are {age} years old')
+
+        skill = AgeSkillWithDirectTo()
+
+        result = skill.execute(message='twenty four', history=[], state_name=None)
+
+        assert result.answers == ['Are you sure?']
+        assert not result.is_relevant
+        assert not result.is_finished
+        assert result.direct_to_state is 'start'
+
+        result = skill.execute(message='24', history=[], state_name='start')
+
+        assert result.answers == ['You are 24 years old']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None
+
+    def test_specify_with_direct_to_callable_state(self):
+
+        class AgeSkillWithDirectTo(BaseSkill):
+            def start(self, message: str):
+                try:
+                    age = int(message)
+                except ValueError:
+                    self.specify(question='Are you sure?', direct_to_state=self.start)
 
                 self.say(f'You are {age} years old')
 

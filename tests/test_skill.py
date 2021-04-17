@@ -150,3 +150,28 @@ class TestSkill:
         assert result.is_relevant
         assert result.is_finished
         assert result.direct_to_state is None
+
+    def test_override_initial_state_name(self):
+
+        class EchoSkill(BaseSkill):
+
+            INITIAL_STATE_NAME = 'echo'
+
+            def echo(self, message: str):
+                self.say(message)
+
+        skill = EchoSkill()
+
+        result = skill.execute(message='hello', history=[], state_name=None)
+
+        assert result.answers == ['hello']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None
+
+        result = skill.execute(message='bye', history=[], state_name='echo')
+
+        assert result.answers == ['bye']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to_state is None

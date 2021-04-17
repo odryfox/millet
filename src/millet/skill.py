@@ -26,14 +26,11 @@ class SkillResult:
 
 class BaseSkill(ABC):
 
+    INITIAL_STATE_NAME = 'start'
+
     def __init__(self):
         self._history = []
         self._answers = []
-        self._initial_state_name = 'start'
-
-    @abstractmethod
-    def start(self, message: Any):
-        pass
 
     @property
     def _is_silent_mood(self):
@@ -81,7 +78,7 @@ class BaseSkill(ABC):
         initial_message = self._history.pop(0)
 
         if not state_name:
-            state_name = self._initial_state_name
+            state_name = self.INITIAL_STATE_NAME
 
         state = getattr(self, state_name)
 

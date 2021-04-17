@@ -9,3 +9,9 @@ isort:
 
 test:
 	python -m pytest examples && pytest --cov=millet
+
+build:
+	python setup.py sdist
+
+deploy:
+	twine upload dist/*

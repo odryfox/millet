@@ -30,23 +30,34 @@ A Simple Example
 
 .. code-block:: python
 
-    from typing import List, Type
-    from millet import Agent, Skill
+    from typing import List
+    from millet import Agent, BaseSkill, BaseSkillClassifier
 
-    class MeetingSkill(Skill):
+
+    class MeetingSkill(BaseSkill):
         def start(self, initial_message: str):
-            name = self.ask(question="What is your name?")
-            self.say(f"Nice to meet you {name}!")
+            name = self.ask(question='What is your name?')
+            self.say(f'Nice to meet you {name}!')
 
-    def skill_classifier(message: str) -> List[Skill]:
-        return [MeetingSkill()]
 
+    class SkillClassifier(BaseSkillClassifier):
+        @property
+        def skills_map(self) -> dict[str, BaseSkill]:
+            return {
+                'meeting': MeetingSkill(),
+            }
+
+        def classify(self, message: str) -> List[str]:
+            return ['meeting']
+
+
+    skill_classifier = SkillClassifier()
     agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user("Bob")
+    conversation = agent.conversation_with_user('Bob')
 
 .. code-block:: python
 
-    >>> conversation.query("Hello")
-    ["What is your name?"]
-    >>> conversation.query("Bob")
-    ["Nice to meet you Bob!"]
+    >>> conversation.query('Hello')
+    ['What is your name?']
+    >>> conversation.query('Bob')
+    ['Nice to meet you Bob!']

@@ -52,7 +52,7 @@
     <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
         <ul class="nav flex-column">
             
-            <li class="nav-item" data-level="2"><a href="#millet" class="nav-link">Добро пожаловать в документацию библиотеки Millet</a>
+            <li class="nav-item" data-level="2"><a href="#millet" class="nav-link">Millet</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -61,7 +61,7 @@
 </div></div>
                     <div class="col-md-9" role="main">
 
-<h2 id="millet">Добро пожаловать в документацию библиотеки Millet</h2>
+<h2 id="millet">Millet</h2>
 <p><strong>Millet</strong> - библиотека для создания диалоговых агентов.</p>
 <h3 id="_1">Вам может быть полезна библиотека, если</h3>
 <ul>
@@ -74,12 +74,12 @@
     print(f&quot;Nice to meet you {name}!&quot;)
 </code></pre>
 <p>и этот же скилл в Millet:</p>
-<pre><code class="language-python">from millet import Skill
+<pre><code class="language-python">from millet import BaseSkill
 
-class MeetingSkill(Skill):
+class MeetingSkill(BaseSkill):
     def start(self, initial_message: str):
-        name = self.ask(question=&quot;What is your name?&quot;)
-        self.say(f&quot;Nice to meet you {name}!&quot;)
+        name = self.ask(question='What is your name?')
+        self.say(f'Nice to meet you {name}!')
 </code></pre>
 <p>если бы вы описывали даже такой простой диалог для асинхронного бота своими силами, то вам бы пришлось использовать state-машину
 где-то хранить текущее состояние ожидания имени пользователя. С увеличением сложности диалога количество состояний будет только расти, как и головная боль в их поддержке.</p>
@@ -96,24 +96,35 @@ Millet позволяет разделить эти слои и предоста
 <p>Возможно вы гений и поймете концепцию, просто посмотрев на пример.</p>
 <p>Опишем агента, который умеет знакомиться:</p>
 <pre><code class="language-python">from typing import List
-from millet import Agent, Skill
+from millet import Agent, BaseSkill, BaseSkillClassifier
 
-class MeetingSkill(Skill):
+
+class MeetingSkill(BaseSkill):
     def start(self, initial_message: str):
-        name = self.ask(question=&quot;What is your name?&quot;)
-        self.say(f&quot;Nice to meet you {name}!&quot;)
+        name = self.ask(question='What is your name?')
+        self.say(f'Nice to meet you {name}!')
 
-def skill_classifier(message: str) -&gt; List[Skill]:
-    return [MeetingSkill()]
 
+class SkillClassifier(BaseSkillClassifier):
+    @property
+    def skills_map(self) -&gt; dict[str, BaseSkill]:
+        return {
+            'meeting': MeetingSkill(),
+        }
+
+    def classify(self, message: str) -&gt; List[str]:
+        return ['meeting']
+
+
+skill_classifier = SkillClassifier()
 agent = Agent(skill_classifier=skill_classifier)
-conversation = agent.conversation_with_user(&quot;user_id_in_system&quot;)
+conversation = agent.conversation_with_user('Bob')
 </code></pre>
 <p>использование:</p>
-<pre><code class="language-shell">&gt;&gt;&gt; conversation.query(&quot;Hello&quot;)
-[&quot;What is your name?&quot;]
-&gt;&gt;&gt; conversation.query(&quot;Bob&quot;)
-[&quot;Nice to meet you Bob!&quot;]
+<pre><code class="language-shell">&gt;&gt;&gt; conversation.query('Hello')
+['What is your name?']
+&gt;&gt;&gt; conversation.query('Bob')
+['Nice to meet you Bob!']
 </code></pre>
 <p>всем остальным рекомендуется продолжить чтение документации.</p>
 <h3 id="_4">Для начала познакомимся с основными понятиями:</h3>
@@ -121,52 +132,67 @@ conversation = agent.conversation_with_user(&quot;user_id_in_system&quot;)
 <p><strong>Скилл</strong> - это умение вашего агента. Хотите научить его играть в города? Просто опишите скилл игры в города и подключите его к вашему агенту. Вот так вот просто.</p>
 <p><strong>Пользователь</strong> - какой-то человек, желающий воспользоваться скиллом вашего агента.</p>
 <p><strong>Диалог</strong> - это процесс использования пользователем скилла агента. Диалог подразумевает, что какой-то пользователь находится в каком-то состоянии использования скилла агента.</p>
-<p><strong>Контекст диалога</strong> - в ходе диалога ваш агент запрашивает у пользователя необходимые данные, для достижения цели скилла. Эти данные и есть контекст диалога.</p>
-<p><strong>Контекст пользователя</strong> - в ходе работы с пользователем ваш агент может узнать принципиально важные данные о пользователе, например имя. Вы можете спросить в каком-то скилле один раз имя и больше не спрашивать его никогда, потому что оно уже будет в контексте пользователя.</p>
 <p><strong>Классификатор скиллов</strong> - механизм определения каким скиллом хочет воспользоваться пользователь на основании его запроса. Библиотека дает возможность описать свой классификатор - это может быть сложная ML-модель либо старые добрые if-else.</p>
 <p><strong>Релевантность</strong> - иногда пользователь не хочет доводить до цели текущий скилл. Он может захотеть воспользоваться другим скиллом или просто закончить текущий. Релевантность определяет уместно ли текущее сообщение пользователя к текущему скиллу. Возможно это сообщение не очень уместно и стоит переключить скилл классификатором.</p>
 <h3 id="_5">Описание скиллов</h3>
-<p>Для создания своего скилла необходимо реализовать класс Skill.</p>
-<pre><code class="language-python">from millet import Skill
+<p>Для создания своего скилла необходимо реализовать класс BaseSkill.</p>
+<pre><code class="language-python">from millet import BaseSkill
 
-class MeetingSkill(Skill):
+class MeetingSkill(BaseSkill):
     def start(self, initial_message: str):
-        name = self.ask(question=&quot;What is your name?&quot;)
-        self.say(f&quot;Nice to meet you {name}!&quot;)
+        name = self.ask(question='What is your name?')
+        self.say(f'Nice to meet you {name}!')
+</code></pre>
+<p>По умолчанию точкой входа является состояние INITIAL_STATE_NAME='start', но вы можете задать любое.</p>
+<pre><code class="language-python">from millet import BaseSkill
+
+class MeetingSkill(BaseSkill):
+
+    INITIAL_STATE_NAME = 'meet'
+
+    def meet(self, initial_message: str):
+        name = self.ask(question='What is your name?')
+        self.say(f'Nice to meet you {name}!')
 </code></pre>
 <p>Для того чтобы запросить какие-то уточнения от клиента в ходе выполнения скилла имеется ряд методов:</p>
-<p><code>say</code> - просто вывести ответ пользователю, упрвление пользователю не передается</p>
+<p><code>say</code> - просто вывести ответ пользователю, управление пользователю не передается</p>
 <hr />
 <p><code>ask</code> - что-то спросить у пользователя, управление перейдет пользователю, когда от него будет получен ответ - скрипт продолжит свое выполнение с этого же места, метод вернет ответ пользователя</p>
+<hr />
 <p><code>specify</code> - то же самое что и ask, но произойдет вызов классификатора (необходимо применять этот метод когда вы не уверены, что ответ релевантен для текущего скилла и есть шанс что это запрос на начала другого скилла)</p>
-<hr />
-<p><code>finish</code> - звершить скилл, по сути можно просто вызвать return</p>
-<p><code>abort</code> - то же самое что и finish, но произойдет вызов классификатора (необходимо применять этот метод когда вы не уверены, что ответ релевантен для текущего скила и есть шанс что это запрос на начала другого скилл)</p>
-<hr />
-<p><code>restart</code> - перезапустить скилл с начала</p>
-<p><code>retry</code> - то же самое что и restart, но произойдет вызов классификатора (необходимо применять этот метод когда вы не уверены, что ответ релевантен для текущего скила и есть шанс что это запрос на начала другого скилл)</p>
 <h3 id="direct_to">direct_to</h3>
-<p>Иногда сложно уместить весь диалог в один скрипт или важно чтобы логика скрипта выполнялась ровно один раз (покупка чего-либо)
+<p>Иногда сложно уместить весь диалог в одно состояние или важно чтобы логика скрипта выполнялась ровно один раз (покупка чего-либо)
 В таких случаях в методах с передачей управления пользователю предусмотрен параметр direct_to, в который нужно передать следующее состояние диалога
-Состояние диалога - метод скила (по аналогии с методом start)</p>
+Состояние диалога - метод скила (по аналогии с методом start). Можно передать сам метод или его название.</p>
+<pre><code class="language-python">from millet import BaseSkill
+
+
+class AgeSkillWithDirectTo(BaseSkill):
+    def start(self, message: str):
+        age = self.ask('How old are you?')
+        self.wait_age(age)
+
+    def wait_age(self, age: str):
+        try:
+            age = int(age)
+        except ValueError:
+            self.specify(question='Send a number pls', direct_to='wait_age')
+
+        self.say(f'You are {age} years old')
+</code></pre>
 <h3 id="_6">Контекст агента</h3>
 <p>Сохранение контекста необходимо для хранения текущего состояния диалога с пользователем.
-Из коробки поставляются следующие контексты:</p>
+Из коробки поставляются следующие менеджеры контексты:</p>
 <ul>
-<li>RAMAgentContext - хранение диалога в оперативной памяти, очищается при удалении экземпляра контекста из памяти</li>
-<li>RedisAgentContext - персистентное хранение диалога в Redis, не сбрасывается между передеплоями</li>
+<li>RAMContextManager - хранение диалога в оперативной памяти, очищается при удалении экземпляра менеджера из памяти</li>
+<li>RedisContextManager - персистентное хранение диалога в Redis, не сбрасывается между передеплоями</li>
 </ul>
-<p>Вы можете определить свой механизм хранения контекста реализовав абстрактный класс AgentContext. Например если вам нужно хранить контекст в postgres.</p>
-<p>Т.к. скилы сохраняются полностью со всем состоянием их переменных, то вы можете использовать эту возможность 
-для хранения необходимых переменных между запросами.</p>
-<p>Примеры: 
-<code>self.current_question_number</code>
-https://github.com/odryfox/millet/blob/master/examples/quiz.py</p>
-<p><code>self.history_words</code>
-https://github.com/odryfox/millet/blob/master/examples/word_chain_game.py</p>
-<p>Контекст скилла сбрасывается при его завершении. </p>
-<p><code>waiting_answer</code>
-https://github.com/odryfox/millet/blob/master/examples/quiz.py</p></div>
+<p>Вы можете определить свой механизм хранения контекста реализовав абстрактный класс BaseContextManager. Например если вам нужно хранить контекст в postgres.</p>
+<h3 id="_7">Примеры использования</h3>
+<p>https://github.com/odryfox/galangal - бот для изучения иностранных слов
+https://github.com/radostkali/arena-battle-tg-bot - бот Сидорович</p>
+<p>Другие примеры использования вы можете найти в здесь
+https://github.com/odryfox/millet/tree/master/examples</p></div>
             </div>
         </div>
 
@@ -250,5 +276,5 @@ https://github.com/odryfox/millet/blob/master/examples/quiz.py</p></div>
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-04-04 09:36:55.362154+00:00
+Build Date UTC : 2021-04-18 04:57:16.733052+00:00
 -->

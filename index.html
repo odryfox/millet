@@ -95,7 +95,7 @@ Millet позволяет разделить эти слои и предоста
 <h3 id="_3">Сходу простой пример</h3>
 <p>Возможно вы гений и поймете концепцию, просто посмотрев на пример.</p>
 <p>Опишем агента, который умеет знакомиться:</p>
-<pre><code class="language-python">from typing import List
+<pre><code class="language-python">from typing import Dict, List
 from millet import Agent, BaseSkill, BaseSkillClassifier
 
 
@@ -107,7 +107,7 @@ class MeetingSkill(BaseSkill):
 
 class SkillClassifier(BaseSkillClassifier):
     @property
-    def skills_map(self) -&gt; dict[str, BaseSkill]:
+    def skills_map(self) -&gt; Dict[str, BaseSkill]:
         return {
             'meeting': MeetingSkill(),
         }
@@ -276,5 +276,5 @@ https://github.com/odryfox/millet/tree/master/examples</p></div>
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-04-18 04:57:16.733052+00:00
+Build Date UTC : 2021-04-25 14:25:06.550398+00:00
 -->

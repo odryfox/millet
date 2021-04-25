@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 
 class SkillSignal(Exception):
@@ -107,7 +107,7 @@ class BaseSkillClassifier(ABC):
 
     @property
     @abstractmethod
-    def skills_map(self) -> dict[str, BaseSkill]:
+    def skills_map(self) -> Dict[str, BaseSkill]:
         pass
 
     @abstractmethod

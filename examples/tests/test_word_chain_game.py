@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 from examples.word_chain_game import WordChainSkill
 from millet import Agent
@@ -12,7 +12,7 @@ def test_win_game():
 
     class SkillClassifier(BaseSkillClassifier):
         @property
-        def skills_map(self) -> dict[str, BaseSkill]:
+        def skills_map(self) -> Dict[str, BaseSkill]:
             return {
                 'game': skill,
             }
@@ -44,7 +44,7 @@ def test_losw_game():
 
     class SkillClassifier(BaseSkillClassifier):
         @property
-        def skills_map(self) -> dict[str, BaseSkill]:
+        def skills_map(self) -> Dict[str, BaseSkill]:
             return {
                 'game': skill,
             }

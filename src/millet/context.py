@@ -1,16 +1,29 @@
 import pickle
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Any, List, Optional, TypeVar
 
 Redis = TypeVar('Redis')
 
 
-@dataclass
 class UserContext:
-    skill_names:  List[str]
-    state_names: List[Optional[str]]
-    history: List[Any]
+
+    def __init__(
+        self,
+        skill_names: List[str],
+        state_names: List[Optional[str]],
+        history: List[Any],
+    ) -> None:
+        self.skill_names = skill_names
+        self.state_names = state_names
+        self.history = history
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, self.__class__) and
+            other.skill_names == self.skill_names and
+            other.state_names == self.state_names and
+            other.history == self.history
+        )
 
 
 class BaseContextManager(ABC):

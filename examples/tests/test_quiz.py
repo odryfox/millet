@@ -1,18 +1,18 @@
-from typing import List
+from typing import Dict, List
 
 from examples.quiz import QuizSkill
 from millet import Agent
 from millet.skill import BaseSkill, BaseSkillClassifier
 
 
-def test_quiz(greeting_quiz: List[dict]):
+def test_quiz(greeting_quiz: List[Dict]):
     user_id = 'bob'
 
     skill = QuizSkill(quiz=greeting_quiz)
 
     class SkillClassifier(BaseSkillClassifier):
         @property
-        def skills_map(self) -> dict[str, BaseSkill]:
+        def skills_map(self) -> Dict[str, BaseSkill]:
             return {
                 'quiz': skill,
             }

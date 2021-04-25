@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, Dict, List
 from unittest import mock
 
 from millet import Agent, BaseSkill, Conversation
@@ -33,7 +33,7 @@ class TestAgent:
 
         class SkillClassifier(BaseSkillClassifier):
             @property
-            def skills_map(self) -> dict[str, BaseSkill]:
+            def skills_map(self) -> Dict[str, BaseSkill]:
                 return {
                     'echo': skill,
                 }
@@ -58,7 +58,7 @@ class TestAgent:
 
         class SkillClassifier(BaseSkillClassifier):
             @property
-            def skills_map(self) -> dict[str, BaseSkill]:
+            def skills_map(self) -> Dict[str, BaseSkill]:
                 return {
                     'echo': skill,
                 }
@@ -85,7 +85,7 @@ class TestAgent:
 
         class SkillClassifier(BaseSkillClassifier):
             @property
-            def skills_map(self) -> dict[str, BaseSkill]:
+            def skills_map(self) -> Dict[str, BaseSkill]:
                 return {
                     'meeting': skill,
                 }
@@ -117,7 +117,7 @@ class TestAgent:
 
         class SkillClassifier(BaseSkillClassifier):
             @property
-            def skills_map(self) -> dict[str, BaseSkill]:
+            def skills_map(self) -> Dict[str, BaseSkill]:
                 return {
                     'meeting': skill,
                 }
@@ -152,7 +152,7 @@ class TestAgent:
 
         class SkillClassifier(BaseSkillClassifier):
             @property
-            def skills_map(self) -> dict[str, BaseSkill]:
+            def skills_map(self) -> Dict[str, BaseSkill]:
                 return {
                     'age': skill,
                 }
@@ -195,7 +195,7 @@ class TestAgent:
 
         class SkillClassifier(BaseSkillClassifier):
             @property
-            def skills_map(self) -> dict[str, BaseSkill]:
+            def skills_map(self) -> Dict[str, BaseSkill]:
                 return {
                     'age': skill,
                 }
@@ -232,7 +232,7 @@ class TestAgent:
 
         class SkillClassifier(BaseSkillClassifier):
             @property
-            def skills_map(self) -> dict[str, BaseSkill]:
+            def skills_map(self) -> Dict[str, BaseSkill]:
                 return {
                     'echo': skill,
                 }
@@ -266,7 +266,7 @@ class TestAgent:
 
         class SkillClassifier(BaseSkillClassifier):
             @property
-            def skills_map(self) -> dict[str, BaseSkill]:
+            def skills_map(self) -> Dict[str, BaseSkill]:
                 return {
                     'echo': EchoSkill(),
                     'age': AgeSkill(),

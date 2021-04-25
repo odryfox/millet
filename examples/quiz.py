@@ -1,9 +1,9 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from millet import BaseSkill
 
 
-def _interpret_answer(answer_validation: dict, answer: str) -> [Optional[str], Optional[str]]:
+def _interpret_answer(answer_validation: Dict, answer: str) -> [Optional[str], Optional[str]]:
     answer_type = answer_validation['type']
 
     if answer_type == 'variants':
@@ -29,7 +29,7 @@ def _interpret_answer(answer_validation: dict, answer: str) -> [Optional[str], O
 
 class QuizSkill(BaseSkill):
 
-    def __init__(self, quiz: List[dict]):
+    def __init__(self, quiz: List[Dict]):
         self.quiz = quiz
         self.current_question_number = 0
         self.answers = {}

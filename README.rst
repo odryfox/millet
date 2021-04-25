@@ -30,7 +30,7 @@ A Simple Example
 
 .. code-block:: python
 
-    from typing import List
+    from typing import Dict, List
     from millet import Agent, BaseSkill, BaseSkillClassifier
 
 
@@ -42,7 +42,7 @@ A Simple Example
 
     class SkillClassifier(BaseSkillClassifier):
         @property
-        def skills_map(self) -> dict[str, BaseSkill]:
+        def skills_map(self) -> Dict[str, BaseSkill]:
             return {
                 'meeting': MeetingSkill(),
             }

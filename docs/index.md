@@ -161,6 +161,33 @@ class AgeSkillWithDirectTo(BaseSkill):
 ```
 
 
+### Контекст скилла 
+Представляет собой горстку параметров в виде dict, которая доступна в рамках выполнения текущего скилла.
+Необходима для передачи некоторых параметров в соседнее состояние скилла.
+
+```python
+from millet import BaseSkill
+
+
+class SkillWithContext(BaseSkill):
+    def start(self, message: str):
+        name = self.ask(question='What is your name?')
+        self.context['name'] = name
+        self.say(f'Nice to meet you {name}!')
+        age = self.ask(f'{name}, how old are you?')
+        self.wait_age(age)
+
+    def wait_age(self, age: str):
+        name = self.context['name']
+        try:
+            age = int(age)
+        except ValueError:
+            self.specify(question=f'{name}, send a number pls', direct_to='wait_age')
+
+        self.say(f'You are {age} years old')
+```
+
+
 ### Контекст агента
 
 Сохранение контекста необходимо для хранения текущего состояния диалога с пользователем.

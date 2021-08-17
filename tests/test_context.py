@@ -12,6 +12,7 @@ _empty_user_context = UserContext(
     skill_names=[],
     state_names=[],
     history=[],
+    context={},
 )
 
 
@@ -25,6 +26,7 @@ class TestRAMContextManager:
             skill_names=['GreetingSkill', 'BuySkill'],
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
+            context={'age': '25'},
         )
         self.context_manager.set_user_context('Alice', other_user_context)
 
@@ -37,6 +39,7 @@ class TestRAMContextManager:
             skill_names=['GreetingSkill', 'BuySkill'],
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
+            context={'age': '25'},
         )
         self.context_manager.set_user_context('Bob', user_context)
 
@@ -49,6 +52,7 @@ class TestRAMContextManager:
             skill_names=['GreetingSkill', 'BuySkill'],
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
+            context={'age': '25'},
         )
         self.context_manager.set_user_context('Bob', user_context)
 
@@ -65,6 +69,7 @@ class TestPickleSerializer:
             skill_names=['GreetingSkill', 'BuySkill'],
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
+            context={},
         )
         serializer = PickleSerializer()
         serialized_user_context = serializer.dumps(user_context)
@@ -87,6 +92,7 @@ class TestRedisContextManager:
             skill_names=['GreetingSkill', 'BuySkill'],
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
+            context={'age': '25'},
         )
         self.context_manager.set_user_context('Alice', other_user_context)
 
@@ -99,6 +105,7 @@ class TestRedisContextManager:
             skill_names=['GreetingSkill', 'BuySkill'],
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
+            context={'age': '25'},
         )
         self.context_manager.set_user_context('Bob', user_context)
 
@@ -111,6 +118,7 @@ class TestRedisContextManager:
             skill_names=['GreetingSkill', 'BuySkill'],
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
+            context={'age': '25'},
         )
         self.context_manager.set_user_context('Bob', user_context)
 

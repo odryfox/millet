@@ -36,21 +36,30 @@ class Agent:
         self._context_manager.set_user_context(user_id, new_user_context)
         return answers
 
-    def _query(self, message: Any, user_context: UserContext) -> Tuple[List[Any], UserContext]:
+    def _query(
+        self,
+        message: Any,
+        user_context: UserContext,
+    ) -> Tuple[List[Any], UserContext]:
         history = user_context.history
 
         if user_context.skill_names:
             skill_names = user_context.skill_names
             state_names = user_context.state_names
+
+            context = user_context.context
         else:
             skill_names = self._skill_classifier.classify(message)
             state_names = [None for _ in skill_names]
+
+            context = {}
 
         answers = []
 
         new_skill_names = []
         new_state_names = []
         new_history = []
+        new_context = {}
 
         for skill_name, state_name in zip(skill_names, state_names):
             skill: BaseSkill = self._skill_classifier.skills_map[skill_name]
@@ -59,6 +68,7 @@ class Agent:
                 message=message,
                 history=history,
                 state_name=state_name,
+                context=context,
             )
 
             if not skill_result.is_relevant:
@@ -71,6 +81,7 @@ class Agent:
                             skill_names=actual_skill_names,
                             state_names=actual_state_names,
                             history=[],
+                            context={},
                         )
                     )
 
@@ -85,11 +96,16 @@ class Agent:
                 else:
                     new_history = history + [message]
 
+                new_context = skill_result.context
+
                 break
+
+            context = {}
 
         new_user_context = UserContext(
             skill_names=new_skill_names,
             state_names=new_state_names,
             history=new_history,
+            context=new_context,
         )
         return answers, new_user_context

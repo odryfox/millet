@@ -17,11 +17,13 @@ class SkillResult:
         is_relevant: bool,
         is_finished: bool,
         direct_to: Optional[str],
+        context: dict,
     ) -> None:
         self.answers = answers
         self.is_relevant = is_relevant
         self.is_finished = is_finished
         self.direct_to = direct_to
+        self.context = context
 
 
 class BaseSkill(ABC):
@@ -30,6 +32,8 @@ class BaseSkill(ABC):
 
     _history = []
     _answers = []
+
+    context = {}
 
     @property
     def _is_silent_mood(self):
@@ -71,11 +75,18 @@ class BaseSkill(ABC):
             direct_to=direct_to,
         )
 
-    def execute(self, message: Any, history: List[Any], state_name: Optional[str]) -> SkillResult:
+    def execute(
+        self,
+        message: Any,
+        history: List[Any],
+        state_name: Optional[str],
+        context: dict,
+    ) -> SkillResult:
         self._history = history
         self._history.append(message)
 
         self._answers = []
+        self.context = context
 
         initial_message = self._history.pop(0)
 
@@ -100,6 +111,7 @@ class BaseSkill(ABC):
             is_relevant=is_relevant,
             is_finished=is_finished,
             direct_to=direct_to,
+            context=self.context,
         )
 
 

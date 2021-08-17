@@ -291,3 +291,85 @@ class TestAgent:
 
         answers = agent.query(message='24', user_id=self.default_user_id)
         assert answers == ['You are 24 years old']
+
+    def test_context_using(self):
+
+        class MeetingSkillWithStates(BaseSkill):
+
+            def start(self, message: str):
+                self.context['greeting'] = 'Nice to meet you'
+                self.ask('What is your name?', direct_to='meeting')
+
+            def meeting(self, name: str):
+                greeting = self.context['greeting']
+                self.say(f'{greeting} {name}!')
+
+        skill = MeetingSkillWithStates()
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'meeting': skill,
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                return ['meeting']
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.query(message='hello', user_id=self.default_user_id)
+        assert answers == ['What is your name?']
+
+        answers = agent.query(message='Bob', user_id=self.default_user_id)
+        assert answers == ['Nice to meet you Bob!']
+
+    def test_multi_skills_and_context_using(self):
+
+        class EchoSkill(BaseSkill):
+            def start(self, message: str):
+                self.context['age'] = 100500
+                self.say(message)
+
+        class AgeSkill(BaseSkill):
+            def start(self, message: str):
+                age = self.context.get('age')
+                if age is None:
+                    age = self.ask('How old are you?')
+
+                    try:
+                        age = int(age)
+                    except ValueError:
+                        age = self.specify(question='Send a number pls')
+
+                self.say(f'You are {age} years old')
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'echo': EchoSkill(),
+                    'age': AgeSkill(),
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                skill_names = []
+                if 'age' in message:
+                    skill_names.append('echo')
+                    skill_names.append('age')
+                return skill_names
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        assert answers == ['Ask me about age', 'How old are you?']
+
+        answers = agent.query(message='twenty four', user_id=self.default_user_id)
+        assert answers == ['Send a number pls']
+
+        answers = agent.query(message='24', user_id=self.default_user_id)
+        assert answers == ['You are 24 years old']

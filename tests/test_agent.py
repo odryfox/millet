@@ -291,3 +291,48 @@ class TestAgent:
 
         answers = agent.query(message='24', user_id=self.default_user_id)
         assert answers == ['You are 24 years old']
+
+    def test_long_skill(self):
+
+        class AgeSkill(BaseSkill):
+            def start(self, message: str):
+                name = self.ask('What is your name?')
+                self.say(f'Nice to meet you {name}!')
+
+                age = self.ask(f'{name}, how old are you?')
+
+                try:
+                    age = int(age)
+                except ValueError:
+                    age = self.specify(question=f'{name}, send a number pls')
+
+                self.say(f'You are {age} years old')
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'age': AgeSkill(),
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                skill_names = []
+                if 'age' in message:
+                    skill_names.append('age')
+                return skill_names
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        assert answers == ['What is your name?']
+
+        answers = agent.query(message='Bob', user_id=self.default_user_id)
+        assert answers == ['Nice to meet you Bob!', 'Bob, how old are you?']
+
+        answers = agent.query(message='twenty four', user_id=self.default_user_id)
+        assert answers == ['Bob, send a number pls']
+
+        answers = agent.query(message='24', user_id=self.default_user_id)
+        assert answers == ['You are 24 years old']

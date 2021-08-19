@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any, List, Optional, Tuple
 
 from millet.context import BaseContextManager, RAMContextManager, UserContext
@@ -66,7 +67,7 @@ class Agent:
 
             skill_result = skill.execute(
                 message=message,
-                history=history,
+                history=deepcopy(history),
                 state_name=state_name,
                 context=context,
             )
@@ -101,6 +102,7 @@ class Agent:
                 break
 
             context = {}
+            history = []
 
         new_user_context = UserContext(
             skill_names=new_skill_names,

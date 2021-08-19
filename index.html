@@ -180,7 +180,30 @@ class AgeSkillWithDirectTo(BaseSkill):
 
         self.say(f'You are {age} years old')
 </code></pre>
-<h3 id="_6">Контекст агента</h3>
+<h3 id="_6">Контекст скилла</h3>
+<p>Представляет собой горстку параметров в виде dict, которая доступна в рамках выполнения текущего скилла.
+Необходима для передачи некоторых параметров в соседнее состояние скилла.</p>
+<pre><code class="language-python">from millet import BaseSkill
+
+
+class SkillWithContext(BaseSkill):
+    def start(self, message: str):
+        name = self.ask(question='What is your name?')
+        self.context['name'] = name
+        self.say(f'Nice to meet you {name}!')
+        age = self.ask(f'{name}, how old are you?')
+        self.wait_age(age)
+
+    def wait_age(self, age: str):
+        name = self.context['name']
+        try:
+            age = int(age)
+        except ValueError:
+            self.specify(question=f'{name}, send a number pls', direct_to='wait_age')
+
+        self.say(f'You are {age} years old')
+</code></pre>
+<h3 id="_7">Контекст агента</h3>
 <p>Сохранение контекста необходимо для хранения текущего состояния диалога с пользователем.
 Из коробки поставляются следующие менеджеры контексты:</p>
 <ul>
@@ -188,7 +211,7 @@ class AgeSkillWithDirectTo(BaseSkill):
 <li>RedisContextManager - персистентное хранение диалога в Redis, не сбрасывается между передеплоями</li>
 </ul>
 <p>Вы можете определить свой механизм хранения контекста реализовав абстрактный класс BaseContextManager. Например если вам нужно хранить контекст в postgres.</p>
-<h3 id="_7">Примеры использования</h3>
+<h3 id="_8">Примеры использования</h3>
 <p>https://github.com/odryfox/galangal - бот для изучения иностранных слов
 https://github.com/radostkali/arena-battle-tg-bot - бот Сидорович</p>
 <p>Другие примеры использования вы можете найти в здесь
@@ -276,5 +299,5 @@ https://github.com/odryfox/millet/tree/master/examples</p></div>
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-08-19 18:37:28.900475+00:00
+Build Date UTC : 2021-08-19 19:23:59.547993+00:00
 -->

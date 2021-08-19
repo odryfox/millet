@@ -25,7 +25,7 @@ def test_win_game():
     skill_classifier = SkillClassifier()
 
     agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user('bob')
+    conversation = agent.conversation_with_user('100500')
 
     answers = conversation.query('start')
     assert answers == ['Lets start', 'My word: hello']
@@ -57,7 +57,7 @@ def test_losw_game():
     skill_classifier = SkillClassifier()
 
     agent = Agent(skill_classifier=skill_classifier)
-    conversation = agent.conversation_with_user('bob')
+    conversation = agent.conversation_with_user('100500')
 
     answers = conversation.query('start')
     assert answers == ['Lets start', 'My word: hello']

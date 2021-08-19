@@ -72,7 +72,7 @@ class SkillClassifier(BaseSkillClassifier):
 
 skill_classifier = SkillClassifier()
 agent = Agent(skill_classifier=skill_classifier)
-conversation = agent.conversation_with_user('Bob')
+conversation = agent.conversation_with_user('100500')
 ```
 
 использование:

@@ -211,7 +211,75 @@ class SkillWithContext(BaseSkill):
 <li>RedisContextManager - персистентное хранение диалога в Redis, не сбрасывается между передеплоями</li>
 </ul>
 <p>Вы можете определить свой механизм хранения контекста реализовав абстрактный класс BaseContextManager. Например если вам нужно хранить контекст в postgres.</p>
-<h3 id="_8">Примеры использования</h3>
+<h3 id="_8">Продвинутое использование</h3>
+<p>Для написания скилов полностью в синхронном стиле можно использовать определение side-функций.
+Библиотека сделает всю магию за вас.</p>
+<pre><code class="language-python">from millet import BaseSkill
+import random
+
+
+class NumberSkill(BaseSkill):
+
+    SIDE_FUNCTIONS = [
+        'random.randint',
+    ]
+
+    def start(self, message: str):
+        number_expected = random.randint(0, 100)  # side function
+        number_actual = int(self.ask('Whats number?'))
+        if number_actual == number_expected:
+            self.say('ok')
+        else:
+            self.say('wrong')
+</code></pre>
+<p>В данном примере randint - side-функция, которая может вернуть разные значения при одинаковых входных данных.
+Для описания side-методов можно использовать SIDE_METHODS. </p>
+<pre><code class="language-python">from millet import BaseSkill
+import random
+
+
+class Rand:
+    def rand(self):
+        return random.randint(0, 100)
+
+class NumberSkill(BaseSkill):
+
+    SIDE_METHODS = [
+        (Rand, 'rand'),
+    ]
+
+    def start(self, message: str):
+        number_expected = Rand().rand()  # side method
+        number_actual = int(self.ask('Whats number?'))
+        if number_actual == number_expected:
+            self.say('ok')
+        else:
+            self.say('wrong')
+</code></pre>
+<p>Если метод текущего скила, то просто напишите его имя.</p>
+<pre><code class="language-python">from millet import BaseSkill
+import random
+
+
+class NumberSkill(BaseSkill):
+
+    SIDE_METHODS = [
+        ('NumberSkill', 'rand'),
+    ]
+
+    def start(self, message: str):
+        number_expected = self.rand()  # side self-method
+        number_actual = int(self.ask('Whats number?'))
+        if number_actual == number_expected:
+            self.say('ok')
+        else:
+            self.say('wrong')
+
+    def rand(self):
+        return random.randint(0, 100)
+</code></pre>
+<p>Рекомендация: при сохранении в контекст, передаче сообщений и использовании SIDE_FUNCTIONS/SIDE_METHODS используйте простые структуры данных (str, int, bool, dict, ...). Это облегчит мигрирование кода скилов без возникновения проблем у активных диалогов. Также альтернативой может быть подход написания новых скилов, а не изменение существующих.</p>
+<h3 id="_9">Примеры использования</h3>
 <p>https://github.com/odryfox/galangal - бот для изучения иностранных слов
 https://github.com/radostkali/arena-battle-tg-bot - бот Сидорович</p>
 <p>Другие примеры использования вы можете найти в здесь
@@ -299,5 +367,5 @@ https://github.com/odryfox/millet/tree/master/examples</p></div>
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-08-19 19:34:06.457691+00:00
+Build Date UTC : 2021-08-21 18:15:26.201720+00:00
 -->

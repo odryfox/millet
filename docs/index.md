@@ -199,6 +199,85 @@ class SkillWithContext(BaseSkill):
 Вы можете определить свой механизм хранения контекста реализовав абстрактный класс BaseContextManager. Например если вам нужно хранить контекст в postgres.
 
 
+### Продвинутое использование
+Для написания скилов полностью в синхронном стиле можно использовать определение side-функций.
+Библиотека сделает всю магию за вас.
+
+```python
+from millet import BaseSkill
+import random
+
+
+class NumberSkill(BaseSkill):
+
+    SIDE_FUNCTIONS = [
+        'random.randint',
+    ]
+
+    def start(self, message: str):
+        number_expected = random.randint(0, 100)  # side function
+        number_actual = int(self.ask('Whats number?'))
+        if number_actual == number_expected:
+            self.say('ok')
+        else:
+            self.say('wrong')
+```
+
+В данном примере randint - side-функция, которая может вернуть разные значения при одинаковых входных данных.
+Для описания side-методов можно использовать SIDE_METHODS. 
+
+```python
+from millet import BaseSkill
+import random
+
+
+class Rand:
+    def rand(self):
+        return random.randint(0, 100)
+
+class NumberSkill(BaseSkill):
+
+    SIDE_METHODS = [
+        (Rand, 'rand'),
+    ]
+
+    def start(self, message: str):
+        number_expected = Rand().rand()  # side method
+        number_actual = int(self.ask('Whats number?'))
+        if number_actual == number_expected:
+            self.say('ok')
+        else:
+            self.say('wrong')
+```
+
+Если метод текущего скила, то просто напишите его имя.
+
+```python
+from millet import BaseSkill
+import random
+
+
+class NumberSkill(BaseSkill):
+
+    SIDE_METHODS = [
+        ('NumberSkill', 'rand'),
+    ]
+
+    def start(self, message: str):
+        number_expected = self.rand()  # side self-method
+        number_actual = int(self.ask('Whats number?'))
+        if number_actual == number_expected:
+            self.say('ok')
+        else:
+            self.say('wrong')
+
+    def rand(self):
+        return random.randint(0, 100)
+```
+
+Рекомендация: при сохранении в контекст, передаче сообщений и использовании SIDE_FUNCTIONS/SIDE_METHODS используйте простые структуры данных (str, int, bool, dict, ...). Это облегчит мигрирование кода скилов без возникновения проблем у активных диалогов. Также альтернативой может быть подход написания новых скилов, а не изменение существующих.
+
+
 ### Примеры использования
 https://github.com/odryfox/galangal - бот для изучения иностранных слов
 https://github.com/radostkali/arena-battle-tg-bot - бот Сидорович

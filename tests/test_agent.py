@@ -3,6 +3,7 @@ from unittest import mock
 
 from millet import Agent, BaseSkill, Conversation
 from millet.skill import BaseSkillClassifier
+import random
 
 
 class TestConversation:
@@ -418,3 +419,179 @@ class TestAgent:
 
         answers = agent.query(message='24', user_id=self.default_user_id)
         assert answers == ['You are 24 years old']
+
+    @mock.patch('random.randint')
+    def test_cached_side_function(self, randint_mock):
+
+        randint_mock.return_value = 35
+
+        class NumberSkill(BaseSkill):
+
+            SIDE_FUNCTIONS = [
+                'random.randint',
+            ]
+
+            def start(self, message: str):
+                number_expected = random.randint(0, 100)  # side function
+                number_actual = int(self.ask('Whats number?'))
+                if number_actual == number_expected:
+                    self.say('ok')
+                else:
+                    self.say('wrong')
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'number': NumberSkill(),
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                return ['number']
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.query(message='start', user_id=self.default_user_id)
+        assert answers == ['Whats number?']
+
+        answers = agent.query(message='35', user_id=self.default_user_id)
+        assert answers == ['ok']
+
+        randint_mock.assert_called_once_with(0, 100)
+
+    @mock.patch('random.randint')
+    def test_cached_side_self_method(self, randint_mock):
+
+        randint_mock.return_value = 35
+
+        class NumberSkill(BaseSkill):
+
+            SIDE_METHODS = [
+                ('NumberSkill', 'rand'),
+            ]
+
+            def start(self, message: str):
+                number_expected = self.rand()  # side self-method
+                number_actual = int(self.ask('Whats number?'))
+                if number_actual == number_expected:
+                    self.say('ok')
+                else:
+                    self.say('wrong')
+
+            def rand(self):
+                return random.randint(0, 100)
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'number': NumberSkill(),
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                return ['number']
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.query(message='start', user_id=self.default_user_id)
+        assert answers == ['Whats number?']
+
+        answers = agent.query(message='35', user_id=self.default_user_id)
+        assert answers == ['ok']
+
+        randint_mock.assert_called_once_with(0, 100)
+
+    @mock.patch('random.randint')
+    def test_cached_side_method(self, randint_mock):
+
+        randint_mock.return_value = 35
+
+        class Rand:
+            def rand(self):
+                return random.randint(0, 100)
+
+        class NumberSkill(BaseSkill):
+
+            SIDE_METHODS = [
+                (Rand, 'rand'),
+            ]
+
+            def start(self, message: str):
+                number_expected = Rand().rand()  # side method
+                number_actual = int(self.ask('Whats number?'))
+                if number_actual == number_expected:
+                    self.say('ok')
+                else:
+                    self.say('wrong')
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'number': NumberSkill(),
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                return ['number']
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.query(message='start', user_id=self.default_user_id)
+        assert answers == ['Whats number?']
+
+        answers = agent.query(message='35', user_id=self.default_user_id)
+        assert answers == ['ok']
+
+        randint_mock.assert_called_once_with(0, 100)
+
+    @mock.patch('random.randint')
+    def test_cached_side_cls_method(self, randint_mock):
+
+        randint_mock.return_value = 35
+
+        class Rand:
+            @classmethod
+            def rand(cls):
+                return random.randint(0, 100)
+
+        class NumberSkill(BaseSkill):
+
+            SIDE_METHODS = [
+                (Rand, 'rand'),
+            ]
+
+            def start(self, message: str):
+                number_expected = Rand.rand()  # side cls-method
+                number_actual = int(self.ask('Whats number?'))
+                if number_actual == number_expected:
+                    self.say('ok')
+                else:
+                    self.say('wrong')
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'number': NumberSkill(),
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                return ['number']
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.query(message='start', user_id=self.default_user_id)
+        assert answers == ['Whats number?']
+
+        answers = agent.query(message='35', user_id=self.default_user_id)
+        assert answers == ['ok']
+
+        randint_mock.assert_called_once_with(0, 100)

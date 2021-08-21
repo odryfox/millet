@@ -1,5 +1,8 @@
+import builtins
+import sys
 from copy import deepcopy
 from typing import Any, List, Optional, Tuple
+from unittest import mock
 
 from millet.context import BaseContextManager, RAMContextManager, UserContext
 from millet.skill import BaseSkill, BaseSkillClassifier
@@ -49,11 +52,17 @@ class Agent:
             state_names = user_context.state_names
 
             context = user_context.context
+
+            calls_history_global = deepcopy(user_context.calls_history)
+            calls_history = deepcopy(user_context.calls_history)
         else:
             skill_names = self._skill_classifier.classify(message)
             state_names = [None for _ in skill_names]
 
             context = {}
+
+            calls_history_global = {}
+            calls_history = {}
 
         answers = []
 
@@ -61,16 +70,88 @@ class Agent:
         new_state_names = []
         new_history = []
         new_context = {}
+        calls_new = {}
 
         for skill_name, state_name in zip(skill_names, state_names):
             skill: BaseSkill = self._skill_classifier.skills_map[skill_name]
 
-            skill_result = skill.execute(
-                message=message,
-                history=deepcopy(history),
-                state_name=state_name,
-                context=context,
-            )
+            calls_current = {}
+
+            def cached_decorator_func(func):
+                def cached_func(*args, **kwargs):
+                    if isinstance(func, mock.MagicMock):
+                        func_name = str(func)
+                    else:
+                        func_name = func.__name__
+
+                    if func_name in calls_history and calls_history[func_name]:
+                        value = calls_history[func_name].pop(0)
+                        return value
+
+                    if isinstance(getattr(func, '__self__', None), type):
+                        # it's cls method
+                        args = args[1:]
+
+                    result = func(*args, **kwargs)
+
+                    if func_name not in calls_current:
+                        calls_current[func_name] = []
+                    calls_current[func_name].append(result)
+
+                    return result
+
+                return cached_func
+
+            cached_decorators = []
+
+            for side_func_name in skill.SIDE_FUNCTIONS:
+                if str(side_func_name) in {'print', '<built-in function print>'}:
+                    side_func_name = 'print'
+                    side_func = builtins.print
+                else:
+                    side_func_path_parts = side_func_name.split('.')
+                    current_module = sys.modules[skill.__module__]
+
+                    for side_func_path_part in side_func_path_parts:
+                        current_module = current_module.__dict__[side_func_path_part]
+
+                    side_func = current_module
+
+                side_func_full_path = '.'.join([skill.__module__, side_func_name])
+                decorator = mock.patch(
+                    target=side_func_full_path,
+                    new=cached_decorator_func(side_func),
+                )
+                cached_decorators.append(decorator)
+
+            for side_class, side_method_name in skill.SIDE_METHODS:
+                if (
+                    isinstance(side_class, str)
+                    and side_class == skill.__class__.__name__
+                ):
+                    side_class = skill.__class__
+
+                side_method = getattr(side_class, side_method_name)
+                decorator = mock.patch.object(
+                    target=side_class,
+                    attribute=side_method_name,
+                    new=cached_decorator_func(side_method),
+                )
+                cached_decorators.append(decorator)
+
+            def execute_skill(*args):
+                skill_result = skill.execute(
+                    message=message,
+                    history=deepcopy(history),
+                    state_name=state_name,
+                    context=context,
+                )
+                return skill_result
+
+            for dec in cached_decorators:
+                execute_skill = dec(execute_skill)
+
+            skill_result = execute_skill()
 
             if not skill_result.is_relevant:
                 actual_skill_names = self._skill_classifier.classify(message)
@@ -83,6 +164,7 @@ class Agent:
                             state_names=actual_state_names,
                             history=[],
                             context={},
+                            calls_history={},
                         )
                     )
 
@@ -94,8 +176,15 @@ class Agent:
 
                 if skill_result.direct_to:
                     new_history = []
+                    calls_new = []
                 else:
                     new_history = history + [message]
+
+                    calls_new = calls_history_global
+                    for func_name in calls_current:
+                        if func_name not in calls_new:
+                            calls_new[func_name] = []
+                        calls_new[func_name].extend(calls_current[func_name])
 
                 new_context = skill_result.context
 
@@ -104,10 +193,14 @@ class Agent:
             context = {}
             history = []
 
+            calls_history_global = {}
+            calls_history = {}
+
         new_user_context = UserContext(
             skill_names=new_skill_names,
             state_names=new_state_names,
             history=new_history,
             context=new_context,
+            calls_history=calls_new,
         )
         return answers, new_user_context

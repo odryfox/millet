@@ -13,11 +13,13 @@ class UserContext:
         state_names: List[Optional[str]],
         history: List[Any],
         context: dict,
+        calls_history: dict,
     ) -> None:
         self.skill_names = skill_names
         self.state_names = state_names
         self.history = history
         self.context = context
+        self.calls_history = calls_history
 
     def __eq__(self, other: Any) -> bool:
         return (
@@ -26,6 +28,7 @@ class UserContext:
             and other.state_names == self.state_names
             and other.history == self.history
             and other.context == self.context
+            and other.calls_history == self.calls_history
         )
 
 
@@ -41,7 +44,7 @@ class BaseContextManager(ABC):
 
     @property
     def _empty_user_context(self) -> UserContext:
-        return UserContext(skill_names=[], state_names=[], history=[], context={})
+        return UserContext(skill_names=[], state_names=[], history=[], context={}, calls_history={})
 
 
 class RAMContextManager(BaseContextManager):

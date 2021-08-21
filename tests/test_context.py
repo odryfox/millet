@@ -13,6 +13,7 @@ _empty_user_context = UserContext(
     state_names=[],
     history=[],
     context={},
+    calls_history={},
 )
 
 
@@ -27,6 +28,7 @@ class TestRAMContextManager:
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
+            calls_history={},
         )
         self.context_manager.set_user_context('Alice', other_user_context)
 
@@ -40,6 +42,7 @@ class TestRAMContextManager:
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
+            calls_history={},
         )
         self.context_manager.set_user_context('Bob', user_context)
 
@@ -53,6 +56,7 @@ class TestRAMContextManager:
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
+            calls_history={},
         )
         self.context_manager.set_user_context('Bob', user_context)
 
@@ -70,6 +74,7 @@ class TestPickleSerializer:
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
             context={},
+            calls_history={},
         )
         serializer = PickleSerializer()
         serialized_user_context = serializer.dumps(user_context)
@@ -93,6 +98,7 @@ class TestRedisContextManager:
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
+            calls_history={},
         )
         self.context_manager.set_user_context('Alice', other_user_context)
 
@@ -106,6 +112,7 @@ class TestRedisContextManager:
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
+            calls_history={},
         )
         self.context_manager.set_user_context('Bob', user_context)
 
@@ -119,6 +126,7 @@ class TestRedisContextManager:
             state_names=[None, 'payment'],
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
+            calls_history={},
         )
         self.context_manager.set_user_context('Bob', user_context)
 

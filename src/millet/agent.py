@@ -125,11 +125,18 @@ class Agent:
                 cached_decorators.append(decorator)
 
             for side_class, side_method_name in skill.SIDE_METHODS:
-                if (
-                    isinstance(side_class, str)
-                    and side_class == skill.__class__.__name__
-                ):
-                    side_class = skill.__class__
+                if isinstance(side_class, str):
+                    if side_class == skill.__class__.__name__:
+                        side_class = skill.__class__
+                    else:
+                        side_class_parts = side_class.split('.')
+
+                        if side_class_parts[0] == 'self':
+                            side_class_parts = side_class_parts[1:]
+                            side_class = skill
+
+                            for side_class_part in side_class_parts:
+                                side_class = getattr(side_class, side_class_part)
 
                 side_method = getattr(side_class, side_method_name)
                 decorator = mock.patch.object(

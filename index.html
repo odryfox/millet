@@ -220,7 +220,7 @@ import random
 
 class NumberSkill(BaseSkill):
 
-    SIDE_FUNCTIONS = [
+    side_functions = [
         'random.randint',
     ]
 
@@ -233,7 +233,7 @@ class NumberSkill(BaseSkill):
             self.say('wrong')
 </code></pre>
 <p>В данном примере randint - side-функция, которая может вернуть разные значения при одинаковых входных данных.
-Для описания side-методов можно использовать SIDE_METHODS. </p>
+Для описания side-методов можно использовать side_methods. </p>
 <pre><code class="language-python">from millet import BaseSkill
 import random
 
@@ -244,7 +244,7 @@ class Rand:
 
 class NumberSkill(BaseSkill):
 
-    SIDE_METHODS = [
+    side_methods = [
         (Rand, 'rand'),
     ]
 
@@ -263,7 +263,7 @@ import random
 
 class NumberSkill(BaseSkill):
 
-    SIDE_METHODS = [
+    side_methods = [
         ('NumberSkill', 'rand'),
     ]
 
@@ -278,7 +278,7 @@ class NumberSkill(BaseSkill):
     def rand(self):
         return random.randint(0, 100)
 </code></pre>
-<p>Рекомендация: при сохранении в контекст, передаче сообщений и использовании SIDE_FUNCTIONS/SIDE_METHODS используйте простые структуры данных (str, int, bool, dict, ...). Это облегчит мигрирование кода скилов без возникновения проблем у активных диалогов. Также альтернативой может быть подход написания новых скилов, а не изменение существующих.</p>
+<p>Рекомендация: при сохранении в контекст, передаче сообщений и использовании side_functions/side_methods используйте простые структуры данных (str, int, bool, dict, ...). Это облегчит мигрирование кода скилов без возникновения проблем у активных диалогов. Также альтернативой может быть подход написания новых скилов, а не изменение существующих.</p>
 <h3 id="_9">Примеры использования</h3>
 <p>https://github.com/odryfox/galangal - бот для изучения иностранных слов
 https://github.com/radostkali/arena-battle-tg-bot - бот Сидорович</p>
@@ -367,5 +367,5 @@ https://github.com/odryfox/millet/tree/master/examples</p></div>
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-08-21 18:15:26.201720+00:00
+Build Date UTC : 2021-08-23 19:04:50.336957+00:00
 -->

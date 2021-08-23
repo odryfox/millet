@@ -210,7 +210,7 @@ import random
 
 class NumberSkill(BaseSkill):
 
-    SIDE_FUNCTIONS = [
+    side_functions = [
         'random.randint',
     ]
 
@@ -224,7 +224,7 @@ class NumberSkill(BaseSkill):
 ```
 
 В данном примере randint - side-функция, которая может вернуть разные значения при одинаковых входных данных.
-Для описания side-методов можно использовать SIDE_METHODS. 
+Для описания side-методов можно использовать side_methods. 
 
 ```python
 from millet import BaseSkill
@@ -237,7 +237,7 @@ class Rand:
 
 class NumberSkill(BaseSkill):
 
-    SIDE_METHODS = [
+    side_methods = [
         (Rand, 'rand'),
     ]
 
@@ -259,7 +259,7 @@ import random
 
 class NumberSkill(BaseSkill):
 
-    SIDE_METHODS = [
+    side_methods = [
         ('NumberSkill', 'rand'),
     ]
 
@@ -275,7 +275,7 @@ class NumberSkill(BaseSkill):
         return random.randint(0, 100)
 ```
 
-Рекомендация: при сохранении в контекст, передаче сообщений и использовании SIDE_FUNCTIONS/SIDE_METHODS используйте простые структуры данных (str, int, bool, dict, ...). Это облегчит мигрирование кода скилов без возникновения проблем у активных диалогов. Также альтернативой может быть подход написания новых скилов, а не изменение существующих.
+Рекомендация: при сохранении в контекст, передаче сообщений и использовании side_functions/side_methods используйте простые структуры данных (str, int, bool, dict, ...). Это облегчит мигрирование кода скилов без возникновения проблем у активных диалогов. Также альтернативой может быть подход написания новых скилов, а не изменение существующих.
 
 
 ### Примеры использования

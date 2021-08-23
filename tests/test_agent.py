@@ -428,7 +428,7 @@ class TestAgent:
 
         class NumberSkill(BaseSkill):
 
-            SIDE_FUNCTIONS = [
+            side_functions = [
                 'random.randint',
             ]
 
@@ -469,7 +469,7 @@ class TestAgent:
 
         class NumberSkill(BaseSkill):
 
-            SIDE_METHODS = [
+            side_methods = [
                 ('NumberSkill', 'rand'),
             ]
 
@@ -517,7 +517,7 @@ class TestAgent:
 
         class NumberSkill(BaseSkill):
 
-            SIDE_METHODS = [
+            side_methods = [
                 (Rand, 'rand'),
             ]
 
@@ -563,7 +563,7 @@ class TestAgent:
 
         class NumberSkill(BaseSkill):
 
-            SIDE_METHODS = [
+            side_methods = [
                 (Rand, 'rand'),
             ]
 
@@ -613,7 +613,7 @@ class TestAgent:
 
         class NumberSkill(BaseSkill):
 
-            SIDE_METHODS = [
+            side_methods = [
                 ('self.rand', 'rand'),
             ]
 
@@ -668,7 +668,7 @@ class TestAgent:
 
         class NumberSkill(BaseSkill):
 
-            SIDE_METHODS = [
+            side_methods = [
                 ('self.rand_manager.rand', 'rand'),
             ]
 

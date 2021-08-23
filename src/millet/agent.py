@@ -104,7 +104,7 @@ class Agent:
 
             cached_decorators = []
 
-            for side_func_name in skill.SIDE_FUNCTIONS:
+            for side_func_name in skill.side_functions:
                 if str(side_func_name) in {'print', '<built-in function print>'}:
                     side_func_name = 'print'
                     side_func = builtins.print
@@ -124,7 +124,7 @@ class Agent:
                 )
                 cached_decorators.append(decorator)
 
-            for side_class, side_method_name in skill.SIDE_METHODS:
+            for side_class, side_method_name in skill.side_methods:
                 if isinstance(side_class, str):
                     if side_class == skill.__class__.__name__:
                         side_class = skill.__class__

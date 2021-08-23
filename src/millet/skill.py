@@ -35,8 +35,8 @@ class BaseSkill(ABC):
 
     context = {}
 
-    SIDE_FUNCTIONS = []
-    SIDE_METHODS = []
+    side_functions = []
+    side_methods = []
 
     @property
     def _is_silent_mood(self):

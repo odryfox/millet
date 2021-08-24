@@ -35,7 +35,11 @@ class Agent:
     def query(self, message: Any, user_id: str) -> List[Any]:
         user_context = self._context_manager.get_user_context(user_id)
 
-        answers, new_user_context = self._query(message, user_context)
+        answers, new_user_context = self._query(
+            message=message,
+            user_context=user_context,
+            user_id=user_id,
+        )
 
         self._context_manager.set_user_context(user_id, new_user_context)
         return answers
@@ -44,6 +48,7 @@ class Agent:
         self,
         message: Any,
         user_context: UserContext,
+        user_id: str,
     ) -> Tuple[List[Any], UserContext]:
         history = user_context.history
 
@@ -74,6 +79,7 @@ class Agent:
 
         for skill_name, state_name in zip(skill_names, state_names):
             skill: BaseSkill = self._skill_classifier.skills_map[skill_name]
+            skill.user_id = user_id
 
             calls_current = {}
 

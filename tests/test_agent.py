@@ -704,3 +704,27 @@ class TestAgent:
         assert answers == ['ok']
 
         randint_mock.assert_called_once_with(0, 100)
+
+    def test_user_id(self):
+        class UserIdSkill(BaseSkill):
+            def execute(self, message: str):
+                self.say(self.user_id)
+
+        skill = UserIdSkill()
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'user_id_skill': skill,
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                return ['user_id_skill']
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.query(message='hello', user_id=self.default_user_id)
+        assert answers == [self.default_user_id]

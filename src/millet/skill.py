@@ -38,6 +38,8 @@ class BaseSkill(ABC):
     side_functions = []
     side_methods = []
 
+    user_id = ''
+
     @property
     def _is_silent_mood(self):
         return bool(self._history)

@@ -77,7 +77,7 @@
 <pre><code class="language-python">from millet import BaseSkill
 
 class MeetingSkill(BaseSkill):
-    def start(self, initial_message: str):
+    def execute(self, initial_message: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 </code></pre>
@@ -100,7 +100,7 @@ from millet import Agent, BaseSkill, BaseSkillClassifier
 
 
 class MeetingSkill(BaseSkill):
-    def start(self, initial_message: str):
+    def execute(self, initial_message: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 
@@ -139,16 +139,16 @@ conversation = agent.conversation_with_user('100500')
 <pre><code class="language-python">from millet import BaseSkill
 
 class MeetingSkill(BaseSkill):
-    def start(self, initial_message: str):
+    def execute(self, initial_message: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 </code></pre>
-<p>По умолчанию точкой входа является состояние INITIAL_STATE_NAME='start', но вы можете задать любое.</p>
+<p>По умолчанию точкой входа является состояние initial_state_name='execute', но вы можете задать любое.</p>
 <pre><code class="language-python">from millet import BaseSkill
 
 class MeetingSkill(BaseSkill):
 
-    INITIAL_STATE_NAME = 'meet'
+    initial_state_name = 'meet'
 
     def meet(self, initial_message: str):
         name = self.ask(question='What is your name?')
@@ -163,12 +163,12 @@ class MeetingSkill(BaseSkill):
 <h3 id="direct_to">direct_to</h3>
 <p>Иногда сложно уместить весь диалог в одно состояние или важно чтобы логика скрипта выполнялась ровно один раз (покупка чего-либо)
 В таких случаях в методах с передачей управления пользователю предусмотрен параметр direct_to, в который нужно передать следующее состояние диалога
-Состояние диалога - метод скила (по аналогии с методом start). Можно передать сам метод или его название.</p>
+Состояние диалога - метод скила (по аналогии с методом execute). Можно передать сам метод или его название.</p>
 <pre><code class="language-python">from millet import BaseSkill
 
 
 class AgeSkillWithDirectTo(BaseSkill):
-    def start(self, message: str):
+    def execute(self, message: str):
         age = self.ask('How old are you?')
         self.wait_age(age)
 
@@ -187,7 +187,7 @@ class AgeSkillWithDirectTo(BaseSkill):
 
 
 class SkillWithContext(BaseSkill):
-    def start(self, message: str):
+    def execute(self, message: str):
         name = self.ask(question='What is your name?')
         self.context['name'] = name
         self.say(f'Nice to meet you {name}!')
@@ -224,7 +224,7 @@ class NumberSkill(BaseSkill):
         'random.randint',
     ]
 
-    def start(self, message: str):
+    def execute(self, message: str):
         number_expected = random.randint(0, 100)  # side function
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -248,7 +248,7 @@ class NumberSkill(BaseSkill):
         (Rand, 'rand'),
     ]
 
-    def start(self, message: str):
+    def execute(self, message: str):
         number_expected = Rand().rand()  # side method
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -267,7 +267,7 @@ class NumberSkill(BaseSkill):
         ('NumberSkill', 'rand'),
     ]
 
-    def start(self, message: str):
+    def execute(self, message: str):
         number_expected = self.rand()  # side self-method
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -367,5 +367,5 @@ https://github.com/odryfox/millet/tree/master/examples</p></div>
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-08-23 19:04:50.336957+00:00
+Build Date UTC : 2021-08-24 16:53:37.376547+00:00
 -->

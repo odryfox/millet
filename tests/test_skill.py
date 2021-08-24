@@ -257,7 +257,7 @@ class TestSkill:
 
         class EchoSkill(BaseSkill):
 
-            INITIAL_STATE_NAME = 'echo'
+            initial_state_name = 'echo'
 
             def echo(self, message: str):
                 self.say(message)

@@ -112,14 +112,14 @@ class MeetingSkill(BaseSkill):
         self.say(f'Nice to meet you {name}!')
 ```
 
-По умолчанию точкой входа является состояние INITIAL_STATE_NAME='start', но вы можете задать любое.
+По умолчанию точкой входа является состояние initial_state_name='start', но вы можете задать любое.
 
 ```python
 from millet import BaseSkill
 
 class MeetingSkill(BaseSkill):
     
-    INITIAL_STATE_NAME = 'meet'
+    initial_state_name = 'meet'
     
     def meet(self, initial_message: str):
         name = self.ask(question='What is your name?')

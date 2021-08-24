@@ -28,7 +28,7 @@ class SkillResult:
 
 class BaseSkill(ABC):
 
-    INITIAL_STATE_NAME = 'start'
+    initial_state_name = 'start'
 
     _history = []
     _answers = []
@@ -94,7 +94,7 @@ class BaseSkill(ABC):
         initial_message = self._history.pop(0)
 
         if not state_name:
-            state_name = self.INITIAL_STATE_NAME
+            state_name = self.initial_state_name
 
         state = getattr(self, state_name)
 

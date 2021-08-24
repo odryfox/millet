@@ -20,7 +20,7 @@ class WordChainSkill(BaseSkill):
         self.vocabulary = vocabulary
         self.history_words = list()
 
-    def start(self, initial_message: str):
+    def execute(self, initial_message: str):
         self.say('Lets start')
         self.my_move()
 

@@ -28,7 +28,7 @@ class SkillResult:
 
 class BaseSkill(ABC):
 
-    initial_state_name = 'start'
+    initial_state_name = 'execute'
 
     _history = []
     _answers = []
@@ -78,7 +78,7 @@ class BaseSkill(ABC):
             direct_to=direct_to,
         )
 
-    def execute(
+    def run(
         self,
         message: Any,
         history: List[Any],

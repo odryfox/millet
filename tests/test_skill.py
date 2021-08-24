@@ -6,12 +6,12 @@ class TestSkill:
     def test_say(self):
 
         class EchoSkill(BaseSkill):
-            def start(self, message: str):
+            def execute(self, message: str):
                 self.say(message)
 
         skill = EchoSkill()
 
-        result = skill.execute(
+        result = skill.run(
             message='hello', history=[], state_name=None, context={}
         )
 
@@ -21,7 +21,7 @@ class TestSkill:
         assert result.direct_to is None
         assert result.context == {}
 
-        result = skill.execute(
+        result = skill.run(
             message='bye', history=[], state_name=None, context=result.context
         )
 
@@ -34,13 +34,13 @@ class TestSkill:
     def test_double_say(self):
 
         class DoubleEchoSkill(BaseSkill):
-            def start(self, message: str):
+            def execute(self, message: str):
                 self.say(message)
                 self.say(message)
 
         skill = DoubleEchoSkill()
 
-        result = skill.execute(
+        result = skill.run(
             message='hello', history=[], state_name=None, context={}
         )
 
@@ -50,7 +50,7 @@ class TestSkill:
         assert result.direct_to is None
         assert result.context == {}
 
-        result = skill.execute(
+        result = skill.run(
             message='bye', history=[], state_name=None, context=result.context
         )
 
@@ -63,13 +63,13 @@ class TestSkill:
     def test_ask(self):
 
         class MeetingSkill(BaseSkill):
-            def start(self, message: str):
+            def execute(self, message: str):
                 name = self.ask('What is your name?')
                 self.say(f'Nice to meet you {name}!')
 
         skill = MeetingSkill()
 
-        result = skill.execute(
+        result = skill.run(
             message='hello', history=[], state_name=None, context={}
         )
 
@@ -79,7 +79,7 @@ class TestSkill:
         assert result.direct_to is None
         assert result.context == {}
 
-        result = skill.execute(
+        result = skill.run(
             message='Bob', history=['hello'], state_name=None, context=result.context
         )
 
@@ -93,7 +93,7 @@ class TestSkill:
 
         class MeetingSkillWithStates(BaseSkill):
 
-            def start(self, message: str):
+            def execute(self, message: str):
                 self.ask('What is your name?', direct_to='meeting')
 
             def meeting(self, name: str):
@@ -101,7 +101,7 @@ class TestSkill:
 
         skill = MeetingSkillWithStates()
 
-        result = skill.execute(
+        result = skill.run(
             message='hello', history=[], state_name=None, context={}
         )
 
@@ -111,7 +111,7 @@ class TestSkill:
         assert result.direct_to == 'meeting'
         assert result.context == {}
 
-        result = skill.execute(
+        result = skill.run(
             message='Bob', history=[], state_name='meeting', context=result.context
         )
 
@@ -125,7 +125,7 @@ class TestSkill:
 
         class MeetingSkillWithStates(BaseSkill):
 
-            def start(self, message: str):
+            def execute(self, message: str):
                 self.ask('What is your name?', direct_to=self.meeting)
 
             def meeting(self, name: str):
@@ -133,7 +133,7 @@ class TestSkill:
 
         skill = MeetingSkillWithStates()
 
-        result = skill.execute(
+        result = skill.run(
             message='hello', history=[], state_name=None, context={}
         )
 
@@ -143,7 +143,7 @@ class TestSkill:
         assert result.direct_to == 'meeting'
         assert result.context == {}
 
-        result = skill.execute(
+        result = skill.run(
             message='Bob', history=[], state_name='meeting', context=result.context
         )
 
@@ -156,7 +156,7 @@ class TestSkill:
     def test_specify(self):
 
         class AgeSkill(BaseSkill):
-            def start(self, message: str):
+            def execute(self, message: str):
                 try:
                     age = int(message)
                 except ValueError:
@@ -166,7 +166,7 @@ class TestSkill:
 
         skill = AgeSkill()
 
-        result = skill.execute(
+        result = skill.run(
             message='twenty four', history=[], state_name=None, context={}
         )
 
@@ -176,7 +176,7 @@ class TestSkill:
         assert result.direct_to is None
         assert result.context == {}
 
-        result = skill.execute(
+        result = skill.run(
             message='24', history=['twenty four'],
             state_name=None, context=result.context,
         )
@@ -190,28 +190,28 @@ class TestSkill:
     def test_specify_with_direct_to(self):
 
         class AgeSkillWithDirectTo(BaseSkill):
-            def start(self, message: str):
+            def execute(self, message: str):
                 try:
                     age = int(message)
                 except ValueError:
-                    self.specify(question='Are you sure?', direct_to='start')
+                    self.specify(question='Are you sure?', direct_to='execute')
 
                 self.say(f'You are {age} years old')
 
         skill = AgeSkillWithDirectTo()
 
-        result = skill.execute(
+        result = skill.run(
             message='twenty four', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['Are you sure?']
         assert not result.is_relevant
         assert not result.is_finished
-        assert result.direct_to is 'start'
+        assert result.direct_to is 'execute'
         assert result.context == {}
 
-        result = skill.execute(
-            message='24', history=[], state_name='start', context=result.context
+        result = skill.run(
+            message='24', history=[], state_name='execute', context=result.context
         )
 
         assert result.answers == ['You are 24 years old']
@@ -223,28 +223,28 @@ class TestSkill:
     def test_specify_with_direct_to_callable(self):
 
         class AgeSkillWithDirectTo(BaseSkill):
-            def start(self, message: str):
+            def execute(self, message: str):
                 try:
                     age = int(message)
                 except ValueError:
-                    self.specify(question='Are you sure?', direct_to=self.start)
+                    self.specify(question='Are you sure?', direct_to=self.execute)
 
                 self.say(f'You are {age} years old')
 
         skill = AgeSkillWithDirectTo()
 
-        result = skill.execute(
+        result = skill.run(
             message='twenty four', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['Are you sure?']
         assert not result.is_relevant
         assert not result.is_finished
-        assert result.direct_to is 'start'
+        assert result.direct_to is 'execute'
         assert result.context == {}
 
-        result = skill.execute(
-            message='24', history=[], state_name='start', context=result.context
+        result = skill.run(
+            message='24', history=[], state_name='execute', context=result.context
         )
 
         assert result.answers == ['You are 24 years old']
@@ -264,7 +264,7 @@ class TestSkill:
 
         skill = EchoSkill()
 
-        result = skill.execute(
+        result = skill.run(
             message='hello', history=[], state_name=None, context={}
         )
 
@@ -274,7 +274,7 @@ class TestSkill:
         assert result.direct_to is None
         assert result.context == {}
 
-        result = skill.execute(
+        result = skill.run(
             message='bye', history=[], state_name='echo', context=result.context
         )
 
@@ -287,7 +287,7 @@ class TestSkill:
     def test_context_using(self):
         class MeetingSkillWithStates(BaseSkill):
 
-            def start(self, message: str):
+            def execute(self, message: str):
                 self.context['greeting'] = 'Nice to meet you'
                 self.ask('What is your name?', direct_to=self.meeting)
 
@@ -297,7 +297,7 @@ class TestSkill:
 
         skill = MeetingSkillWithStates()
 
-        result = skill.execute(
+        result = skill.run(
             message='hello', history=[], state_name=None, context={}
         )
 
@@ -307,7 +307,7 @@ class TestSkill:
         assert result.direct_to == 'meeting'
         assert result.context == {'greeting': 'Nice to meet you'}
 
-        result = skill.execute(
+        result = skill.run(
             message='Bob', history=[], state_name='meeting', context=result.context
         )
 

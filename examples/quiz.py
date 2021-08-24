@@ -34,7 +34,7 @@ class QuizSkill(BaseSkill):
         self.current_question_number = 0
         self.answers = {}
 
-    def start(self, initial_message: str):
+    def execute(self, initial_message: str):
         self.say('Lets go')
         self.ask_current_question()
 

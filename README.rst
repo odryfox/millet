@@ -35,7 +35,7 @@ A Simple Example
 
 
     class MeetingSkill(BaseSkill):
-        def start(self, initial_message: str):
+        def execute(self, initial_message: str):
             name = self.ask(question='What is your name?')
             self.say(f'Nice to meet you {name}!')
 

@@ -146,8 +146,8 @@ class Agent:
                 )
                 cached_decorators.append(decorator)
 
-            def execute_skill(*args):
-                skill_result = skill.execute(
+            def run_skill(*args):
+                skill_result = skill.run(
                     message=message,
                     history=deepcopy(history),
                     state_name=state_name,
@@ -156,9 +156,9 @@ class Agent:
                 return skill_result
 
             for dec in cached_decorators:
-                execute_skill = dec(execute_skill)
+                run_skill = dec(run_skill)
 
-            skill_result = execute_skill()
+            skill_result = run_skill()
 
             if not skill_result.is_relevant:
                 actual_skill_names = self._skill_classifier.classify(message)

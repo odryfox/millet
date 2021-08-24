@@ -22,7 +22,7 @@ def meeting_skill(message: str):
 from millet import BaseSkill
 
 class MeetingSkill(BaseSkill):
-    def start(self, initial_message: str):
+    def execute(self, initial_message: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 ```
@@ -54,7 +54,7 @@ from millet import Agent, BaseSkill, BaseSkillClassifier
 
 
 class MeetingSkill(BaseSkill):
-    def start(self, initial_message: str):
+    def execute(self, initial_message: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 
@@ -107,12 +107,12 @@ conversation = agent.conversation_with_user('100500')
 from millet import BaseSkill
 
 class MeetingSkill(BaseSkill):
-    def start(self, initial_message: str):
+    def execute(self, initial_message: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 ```
 
-По умолчанию точкой входа является состояние initial_state_name='start', но вы можете задать любое.
+По умолчанию точкой входа является состояние initial_state_name='execute', но вы можете задать любое.
 
 ```python
 from millet import BaseSkill
@@ -140,14 +140,14 @@ class MeetingSkill(BaseSkill):
 ### direct_to
 Иногда сложно уместить весь диалог в одно состояние или важно чтобы логика скрипта выполнялась ровно один раз (покупка чего-либо)
 В таких случаях в методах с передачей управления пользователю предусмотрен параметр direct_to, в который нужно передать следующее состояние диалога
-Состояние диалога - метод скила (по аналогии с методом start). Можно передать сам метод или его название.
+Состояние диалога - метод скила (по аналогии с методом execute). Можно передать сам метод или его название.
 
 ```python
 from millet import BaseSkill
 
 
 class AgeSkillWithDirectTo(BaseSkill):
-    def start(self, message: str):
+    def execute(self, message: str):
         age = self.ask('How old are you?')
         self.wait_age(age)
 
@@ -170,7 +170,7 @@ from millet import BaseSkill
 
 
 class SkillWithContext(BaseSkill):
-    def start(self, message: str):
+    def execute(self, message: str):
         name = self.ask(question='What is your name?')
         self.context['name'] = name
         self.say(f'Nice to meet you {name}!')
@@ -214,7 +214,7 @@ class NumberSkill(BaseSkill):
         'random.randint',
     ]
 
-    def start(self, message: str):
+    def execute(self, message: str):
         number_expected = random.randint(0, 100)  # side function
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -241,7 +241,7 @@ class NumberSkill(BaseSkill):
         (Rand, 'rand'),
     ]
 
-    def start(self, message: str):
+    def execute(self, message: str):
         number_expected = Rand().rand()  # side method
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -263,7 +263,7 @@ class NumberSkill(BaseSkill):
         ('NumberSkill', 'rand'),
     ]
 
-    def start(self, message: str):
+    def execute(self, message: str):
         number_expected = self.rand()  # side self-method
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:

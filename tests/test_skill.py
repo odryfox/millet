@@ -31,6 +31,24 @@ class TestSkill:
         assert result.direct_to is None
         assert result.context == {}
 
+    def test_say_return(self):
+
+        class EchoSkill(BaseSkill):
+            def execute(self, message: str):
+                return message
+
+        skill = EchoSkill()
+
+        result = skill.run(
+            message='hello', history=[], state_name=None, context={}
+        )
+
+        assert result.answers == ['hello']
+        assert result.is_relevant
+        assert result.is_finished
+        assert result.direct_to is None
+        assert result.context == {}
+
     def test_double_say(self):
 
         class DoubleEchoSkill(BaseSkill):

@@ -105,7 +105,9 @@ class BaseSkill(ABC):
         direct_to = None
 
         try:
-            state(initial_message)
+            answer = state(initial_message)
+            if answer is not None:
+                self._answers.append(answer)
             is_finished = True
         except SkillSignal as signal:
             is_relevant = signal.is_relevant

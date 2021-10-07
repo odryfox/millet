@@ -7,7 +7,7 @@ A simple framework for building complex dialogue systems.
     :target: https://badge.fury.io/py/Millet
 
 .. image:: https://readthedocs.org/projects/millet/badge/?version=latest
-    :target: https://millet.readthedocs.io/en/latest/?badge=latest
+    :target: https://odryfox.github.io/millet/
     :alt: Documentation Status
 
 .. image:: https://travis-ci.org/odryfox/millet.svg?branch=master

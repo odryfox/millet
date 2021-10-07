@@ -178,7 +178,8 @@ class Agent:
                             history=[],
                             context={},
                             calls_history={},
-                        )
+                        ),
+                        user_id=user_id,
                     )
 
             answers.extend(skill_result.answers)

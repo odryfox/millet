@@ -339,6 +339,48 @@ class TestAgent:
         answers = agent.query(message='24', user_id=self.default_user_id)
         assert answers == ['You are 24 years old']
 
+    def test_interrupt_skill(self):
+        class GreetingSkill(BaseSkill):
+            def execute(self, message: str):
+                self.say('Hello')
+
+        class AgeSkill(BaseSkill):
+            def execute(self, message: str):
+                age = self.ask('How old are you?')
+
+                try:
+                    age = int(age)
+                except ValueError:
+                    age = self.specify(question='Send a number pls')
+
+                self.say(f'You are {age} years old')
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'hello': GreetingSkill(),
+                    'age': AgeSkill(),
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                skill_names = []
+                if 'age' in message:
+                    skill_names.append('age')
+                elif 'hello' in message:
+                    skill_names.append('hello')
+                return skill_names
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        assert answers == ['How old are you?']
+
+        answers = agent.query(message='hello', user_id=self.default_user_id)
+        assert answers == ['Hello']
+
     def test_context_using(self):
 
         class MeetingSkillWithStates(BaseSkill):

@@ -27,13 +27,13 @@ def test_win_game():
     agent = Agent(skill_classifier=skill_classifier)
     conversation = agent.conversation_with_user('100500')
 
-    answers = conversation.query('start')
+    answers = conversation.process_message('start')
     assert answers == ['Lets start', 'My word: hello']
 
-    answers = conversation.query('bye')
+    answers = conversation.process_message('bye')
     assert answers == ['You are lose!']
 
-    answers = conversation.query('owl')
+    answers = conversation.process_message('owl')
     assert answers == []
 
 
@@ -59,11 +59,11 @@ def test_losw_game():
     agent = Agent(skill_classifier=skill_classifier)
     conversation = agent.conversation_with_user('100500')
 
-    answers = conversation.query('start')
+    answers = conversation.process_message('start')
     assert answers == ['Lets start', 'My word: hello']
 
-    answers = conversation.query('owl')
+    answers = conversation.process_message('owl')
     assert answers == ['My word: lip']
 
-    answers = conversation.query('plus')
+    answers = conversation.process_message('plus')
     assert answers == ['You are win!']

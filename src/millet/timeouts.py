@@ -7,8 +7,7 @@ class MessageTimeOutException(Exception):
 
 
 class MessageTimeOut:
-    def __init__(self, timeout_uid: str) -> None:
-        self.timeout_uid = timeout_uid
+    pass
 
 
 class BaseTimeoutsBroker(ABC):

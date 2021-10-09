@@ -77,9 +77,9 @@ conversation = agent.conversation_with_user('100500')
 
 использование:
 ```shell
->>> conversation.query('Hello')
+>>> conversation.process_message('Hello')
 ['What is your name?']
->>> conversation.query('Bob')
+>>> conversation.process_message('Bob')
 ['Nice to meet you Bob!']
 ```
 
@@ -279,6 +279,80 @@ class NumberSkill(BaseSkill):
 
 Рекомендация: при сохранении в контекст, передаче сообщений и использовании side_functions/side_methods используйте простые структуры данных (str, int, bool, dict, ...). Это облегчит мигрирование кода скилов без возникновения проблем у активных диалогов. Также альтернативой может быть подход написания новых скилов, а не изменение существующих.
 
+
+### Actions
+Необходимы для 100%-ой классификации скилов перед обработкой сообщения. Механика нужна для обработки действий пользователя, в которых мы уверены, наподобие нажатия кнопок.
+```python
+# гарантированно произойдет классификации скилов
+agent.process_action(
+    message='action',
+    user_id='100500',
+)
+
+# классификации скилов может произойти, а может и не произойти 
+# в зависимости от текущего скила
+agent.process_message(
+    message='action',
+    user_id='100500',
+)
+```
+
+
+### Timeouts
+Нужны для обработки ситуаций, когда клиент долго не отвечает. 
+Обычно применяется для напоминания клиенту о необходимости ответить на вопрос.
+
+```python
+from millet import BaseSkill
+from millet.timeouts import (
+    MessageTimeOutException
+)
+
+class MeetingSkill(BaseSkill):
+    def execute(self, message: str):
+        try:
+            name = self.ask('What is your name?', timeout=10)
+        except MessageTimeOutException:
+            name = self.ask('I repeat the question: what is your name?')
+
+        return f'Nice to meet you {name}!'
+```
+
+Для поддержки данной функциональности, необходимо реализовать класс BaseTimeoutsBroker.
+Он должен инициировать создание ассинхронной задачи через timeout секунд.
+
+Пример на celery:
+```python
+from typing import Dict, List
+from millet import Agent, BaseSkill, BaseSkillClassifier
+from millet.timeouts import BaseTimeoutsBroker
+
+
+class SkillClassifier(BaseSkillClassifier):
+    @property
+    def skills_map(self) -> Dict[str, BaseSkill]:
+        return {}
+
+    def classify(self, message: str) -> List[str]:
+        return []
+    
+skill_classifier = SkillClassifier()
+
+
+# @celery.task
+def agent_timeout_task(timeout_uid: str, user_id: str):
+    agent = Agent(skill_classifier=skill_classifier)
+    agent.process_timeout(timeout_uid=timeout_uid, user_id=user_id)
+
+
+class CeleryTimeoutsBroker(BaseTimeoutsBroker):
+    def execute(self, user_id: str, timeout: int, timeout_uid: str):
+        agent_timeout_task.apply_async((timeout_uid, user_id), countdown=timeout)
+
+        
+celery_timeouts_broker = CeleryTimeoutsBroker()
+agent = Agent(skill_classifier=skill_classifier, timeouts_broker=celery_timeouts_broker)
+```
 
 ### Примеры использования
 https://github.com/odryfox/galangal - бот для изучения иностранных слов

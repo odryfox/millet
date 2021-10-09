@@ -11,21 +11,23 @@ class TestConversation:
 
     default_user_id = 'bob'
 
-    def test_query(self):
+    def test_process_message(self):
         message = 'hello'
         agent = mock.Mock(spec=Agent)
 
         conversation = Conversation(agent=agent, user_id=self.default_user_id)
-        conversation.query(message=message)
+        conversation.process_message(message=message)
 
-        agent.query.assert_called_once_with(message=message, user_id=self.default_user_id)
+        agent.process_message.assert_called_once_with(
+            message=message, user_id=self.default_user_id
+        )
 
 
 class TestAgent:
 
     default_user_id = 'bob'
 
-    def test_query(self):
+    def test_process_message(self):
 
         class EchoSkill(BaseSkill):
             def execute(self, message: str):
@@ -47,7 +49,7 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='hello', user_id=self.default_user_id)
+        answers = agent.process_message(message='hello', user_id=self.default_user_id)
         assert answers == ['hello']
 
     def test_conversation_with_user(self):
@@ -99,10 +101,10 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='hello', user_id=self.default_user_id)
+        answers = agent.process_message(message='hello', user_id=self.default_user_id)
         assert answers == ['What is your name?']
 
-        answers = agent.query(message='Bob', user_id=self.default_user_id)
+        answers = agent.process_message(message='Bob', user_id=self.default_user_id)
         assert answers == ['Nice to meet you Bob!']
 
     def test_ask_with_direct_to(self):
@@ -131,10 +133,10 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='hello', user_id=self.default_user_id)
+        answers = agent.process_message(message='hello', user_id=self.default_user_id)
         assert answers == ['What is your name?']
 
-        answers = agent.query(message='Bob', user_id=self.default_user_id)
+        answers = agent.process_message(message='Bob', user_id=self.default_user_id)
         assert answers == ['Nice to meet you Bob!']
 
     def test_query_with_specify(self):
@@ -169,13 +171,13 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        answers = agent.process_message(message='Ask me about age', user_id=self.default_user_id)
         assert answers == ['How old are you?']
 
-        answers = agent.query(message='twenty four', user_id=self.default_user_id)
+        answers = agent.process_message(message='twenty four', user_id=self.default_user_id)
         assert answers == ['Send a number pls']
 
-        answers = agent.query(message='24', user_id=self.default_user_id)
+        answers = agent.process_message(message='24', user_id=self.default_user_id)
         assert answers == ['You are 24 years old']
 
     def test_query_with_specify_with_direct_to(self):
@@ -212,16 +214,16 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        answers = agent.process_message(message='Ask me about age', user_id=self.default_user_id)
         assert answers == ['How old are you?']
 
-        answers = agent.query(message='twenty four', user_id=self.default_user_id)
+        answers = agent.process_message(message='twenty four', user_id=self.default_user_id)
         assert answers == ['Send a number pls']
 
-        answers = agent.query(message='TWENTY FOUR', user_id=self.default_user_id)
+        answers = agent.process_message(message='TWENTY FOUR', user_id=self.default_user_id)
         assert answers == ['Send a number pls']
 
-        answers = agent.query(message='24', user_id=self.default_user_id)
+        answers = agent.process_message(message='24', user_id=self.default_user_id)
         assert answers == ['You are 24 years old']
 
     def test_multi_skills(self):
@@ -246,7 +248,7 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='hello', user_id=self.default_user_id)
+        answers = agent.process_message(message='hello', user_id=self.default_user_id)
         assert answers == ['hello', 'hello']
 
     def test_multi_skills_and_one_continuously(self):
@@ -285,13 +287,13 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        answers = agent.process_message(message='Ask me about age', user_id=self.default_user_id)
         assert answers == ['Ask me about age', 'How old are you?']
 
-        answers = agent.query(message='twenty four', user_id=self.default_user_id)
+        answers = agent.process_message(message='twenty four', user_id=self.default_user_id)
         assert answers == ['Send a number pls']
 
-        answers = agent.query(message='24', user_id=self.default_user_id)
+        answers = agent.process_message(message='24', user_id=self.default_user_id)
         assert answers == ['You are 24 years old']
 
     def test_long_skill(self):
@@ -327,16 +329,16 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        answers = agent.process_message(message='Ask me about age', user_id=self.default_user_id)
         assert answers == ['What is your name?']
 
-        answers = agent.query(message='Bob', user_id=self.default_user_id)
+        answers = agent.process_message(message='Bob', user_id=self.default_user_id)
         assert answers == ['Nice to meet you Bob!', 'Bob, how old are you?']
 
-        answers = agent.query(message='twenty four', user_id=self.default_user_id)
+        answers = agent.process_message(message='twenty four', user_id=self.default_user_id)
         assert answers == ['Bob, send a number pls']
 
-        answers = agent.query(message='24', user_id=self.default_user_id)
+        answers = agent.process_message(message='24', user_id=self.default_user_id)
         assert answers == ['You are 24 years old']
 
     def test_interrupt_skill(self):
@@ -375,10 +377,10 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        answers = agent.process_message(message='Ask me about age', user_id=self.default_user_id)
         assert answers == ['How old are you?']
 
-        answers = agent.query(message='hello', user_id=self.default_user_id)
+        answers = agent.process_message(message='hello', user_id=self.default_user_id)
         assert answers == ['Hello']
 
     def test_context_using(self):
@@ -409,10 +411,10 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='hello', user_id=self.default_user_id)
+        answers = agent.process_message(message='hello', user_id=self.default_user_id)
         assert answers == ['What is your name?']
 
-        answers = agent.query(message='Bob', user_id=self.default_user_id)
+        answers = agent.process_message(message='Bob', user_id=self.default_user_id)
         assert answers == ['Nice to meet you Bob!']
 
     def test_multi_skills_and_context_using(self):
@@ -454,13 +456,13 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='Ask me about age', user_id=self.default_user_id)
+        answers = agent.process_message(message='Ask me about age', user_id=self.default_user_id)
         assert answers == ['Ask me about age', 'How old are you?']
 
-        answers = agent.query(message='twenty four', user_id=self.default_user_id)
+        answers = agent.process_message(message='twenty four', user_id=self.default_user_id)
         assert answers == ['Send a number pls']
 
-        answers = agent.query(message='24', user_id=self.default_user_id)
+        answers = agent.process_message(message='24', user_id=self.default_user_id)
         assert answers == ['You are 24 years old']
 
     @mock.patch('random.randint')
@@ -496,10 +498,10 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='start', user_id=self.default_user_id)
+        answers = agent.process_message(message='start', user_id=self.default_user_id)
         assert answers == ['Whats number?']
 
-        answers = agent.query(message='35', user_id=self.default_user_id)
+        answers = agent.process_message(message='35', user_id=self.default_user_id)
         assert answers == ['ok']
 
         randint_mock.assert_called_once_with(0, 100)
@@ -540,10 +542,10 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='start', user_id=self.default_user_id)
+        answers = agent.process_message(message='start', user_id=self.default_user_id)
         assert answers == ['Whats number?']
 
-        answers = agent.query(message='35', user_id=self.default_user_id)
+        answers = agent.process_message(message='35', user_id=self.default_user_id)
         assert answers == ['ok']
 
         randint_mock.assert_called_once_with(0, 100)
@@ -585,10 +587,10 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='start', user_id=self.default_user_id)
+        answers = agent.process_message(message='start', user_id=self.default_user_id)
         assert answers == ['Whats number?']
 
-        answers = agent.query(message='35', user_id=self.default_user_id)
+        answers = agent.process_message(message='35', user_id=self.default_user_id)
         assert answers == ['ok']
 
         randint_mock.assert_called_once_with(0, 100)
@@ -631,10 +633,10 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='start', user_id=self.default_user_id)
+        answers = agent.process_message(message='start', user_id=self.default_user_id)
         assert answers == ['Whats number?']
 
-        answers = agent.query(message='35', user_id=self.default_user_id)
+        answers = agent.process_message(message='35', user_id=self.default_user_id)
         assert answers == ['ok']
 
         randint_mock.assert_called_once_with(0, 100)
@@ -684,10 +686,10 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='start', user_id=self.default_user_id)
+        answers = agent.process_message(message='start', user_id=self.default_user_id)
         assert answers == ['Whats number?']
 
-        answers = agent.query(message='35', user_id=self.default_user_id)
+        answers = agent.process_message(message='35', user_id=self.default_user_id)
         assert answers == ['ok']
 
         randint_mock.assert_called_once_with(0, 100)
@@ -739,10 +741,10 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='start', user_id=self.default_user_id)
+        answers = agent.process_message(message='start', user_id=self.default_user_id)
         assert answers == ['Whats number?']
 
-        answers = agent.query(message='35', user_id=self.default_user_id)
+        answers = agent.process_message(message='35', user_id=self.default_user_id)
         assert answers == ['ok']
 
         randint_mock.assert_called_once_with(0, 100)
@@ -768,7 +770,7 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='hello', user_id=self.default_user_id)
+        answers = agent.process_message(message='hello', user_id=self.default_user_id)
         assert answers == [self.default_user_id]
 
     def test_action(self):
@@ -798,13 +800,12 @@ class TestAgent:
 
         agent = Agent(skill_classifier=skill_classifier)
 
-        answers = agent.query(message='hello', user_id=self.default_user_id)
+        answers = agent.process_message(message='hello', user_id=self.default_user_id)
         assert answers == ['What is your name?']
 
-        answers = agent.query(
+        answers = agent.process_action(  # force classify
             message='echo click',
             user_id=self.default_user_id,
-            is_action=True,  # force classify
         )
         assert answers == ['echo click']
 

@@ -26,25 +26,25 @@ def test_quiz(greeting_quiz: List[Dict]):
 
     agent = Agent(skill_classifier=skill_classifier)
 
-    answers = agent.query('start', user_id)
+    answers = agent.process_message('start', user_id)
     assert answers == ['Lets go', 'Indicate your gender.']
 
-    answers = agent.query('MALE', user_id)
+    answers = agent.process_message('MALE', user_id)
     assert answers == ['Incorrect variant!']
 
-    answers = agent.query('male', user_id)
+    answers = agent.process_message('male', user_id)
     assert answers == ['How old are you?']
 
-    answers = agent.query('-24', user_id)
+    answers = agent.process_message('-24', user_id)
     assert answers == ['Not in the interval!']
 
-    answers = agent.query('24', user_id)
+    answers = agent.process_message('24', user_id)
     assert answers == ['Tell us about your hobbies.']
 
-    answers = agent.query('I like programming!', user_id)
+    answers = agent.process_message('I like programming!', user_id)
     assert answers == ['Thank you for your answers.']
 
-    answers = agent.query('Thx', user_id)
+    answers = agent.process_message('Thx', user_id)
     assert answers == []
 
     assert skill.answers == {'1': 'm', '2': 24, '3': 'I like programming!'}

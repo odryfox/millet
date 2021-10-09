@@ -15,8 +15,14 @@ class Conversation:
         self.agent = agent
         self.user_id = user_id
 
-    def query(self, message: Any) -> List[Any]:
-        return self.agent.query(message=message, user_id=self.user_id)
+    def process_message(self, message: Any) -> List[Any]:
+        return self.agent.process_message(message=message, user_id=self.user_id)
+
+    def process_action(self, message: Any) -> List[Any]:
+        return self.agent.process_action(message=message, user_id=self.user_id)
+
+    def process_timeout(self, timeout_uid: str) -> List[Any]:
+        return self.agent.process_timeout(timeout_uid=timeout_uid, user_id=self.user_id)
 
 
 class Agent:
@@ -35,7 +41,13 @@ class Agent:
     def conversation_with_user(self, user_id: str) -> Conversation:
         return Conversation(agent=self, user_id=user_id)
 
-    def query(self, message: Any, user_id: str, is_action: bool = False) -> List[Any]:
+    def _process_event(
+        self,
+        user_id: str,
+        message: Optional[Any] = None,
+        is_action: bool = False,
+        timeout_uid: Optional[str] = None,
+    ) -> List[Any]:
         user_context = self._context_manager.get_user_context(user_id)
 
         result = self._query(
@@ -43,6 +55,7 @@ class Agent:
             user_context=user_context,
             user_id=user_id,
             is_action=is_action,
+            timeout_uid=timeout_uid,
         )
         if not result:
             return []
@@ -53,18 +66,31 @@ class Agent:
         return answers
 
     def process_message(self, message: Any, user_id: str) -> List[Any]:
-        return self.query(message=message, user_id=user_id, is_action=False)
+        return self._process_event(message=message, user_id=user_id)
 
     def process_action(self, message: Any, user_id: str) -> List[Any]:
-        return self.query(message=message, user_id=user_id, is_action=True)
+        return self._process_event(message=message, user_id=user_id, is_action=True)
+
+    def process_timeout(self, timeout_uid: str, user_id: str) -> List[Any]:
+        result = self._process_event(
+            timeout_uid=timeout_uid,
+            user_id=user_id,
+        )
+        return result
 
     def _query(
         self,
-        message: Any,
+        message: Optional[Any],
         user_context: dict,
         user_id: str,
         is_action: bool,
+        timeout_uid: Optional[str],
     ) -> Optional[Tuple[List[Any], dict]]:
+
+        if timeout_uid is not None:
+            if user_context['timeout_uid'] != timeout_uid:
+                return None
+            message = MessageTimeOut()
 
         if is_action:
             actual_skill_names = self._skill_classifier.classify(message)
@@ -82,14 +108,8 @@ class Agent:
                     ),
                     user_id=user_id,
                     is_action=False,
+                    timeout_uid=None,
                 )
-
-        if (
-            isinstance(message, MessageTimeOut)
-            and user_context['timeout_uid'] != message.timeout_uid
-        ):
-            # too late
-            return None
 
         history = user_context['history']
 
@@ -117,7 +137,7 @@ class Agent:
         new_history = []
         new_context = {}
         calls_new = {}
-        new_timeout_uid = []
+        new_timeout_uid = None
 
         for skill_name, state_name in zip(skill_names, state_names):
             skill: BaseSkill = self._skill_classifier.skills_map[skill_name]
@@ -236,6 +256,7 @@ class Agent:
                         ),
                         user_id=user_id,
                         is_action=False,
+                        timeout_uid=None,
                     )
 
             answers.extend(skill_result.answers)

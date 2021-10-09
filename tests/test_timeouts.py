@@ -34,7 +34,7 @@ def test_skill_timeout_happened():
     assert result.timeout == 10
 
     result = skill.run(
-        message=MessageTimeOut(timeout_uid=''),
+        message=MessageTimeOut(),
         history=['hello'],
         state_name=None,
         context={},
@@ -49,7 +49,7 @@ def test_skill_timeout_happened():
 
     result = skill.run(
         message='Bob',
-        history=['hello', MessageTimeOut(timeout_uid='')],
+        history=['hello', MessageTimeOut()],
         state_name=None,
         context={},
     )
@@ -87,7 +87,7 @@ def test_agent_timeout_happened():
 
     async_task_mock = mock.Mock()
     # apply async_task(user_id, timeout_uid) after timeout
-    #     agent.query(message=MessageTimeOut(timeout_uid), user_id=user_id)
+    #     agent.process_timeout(timeout_uid=timeout_uid, user_id=user_id)
 
     class FakeTimeoutsBroker(BaseTimeoutsBroker):
         def execute(self, user_id: str, timeout: int, timeout_uid: str):
@@ -103,10 +103,10 @@ def test_agent_timeout_happened():
         timeouts_broker=fake_timeouts_broker,
     )
 
-    answers = agent.query(message='hello', user_id='100500')
+    answers = agent.process_message(message='hello', user_id='100500')
     assert answers == ['What is your name?']
 
-    answers = agent.query(message=MessageTimeOut(timeout_uid='12345'), user_id='100500')
+    answers = agent.process_timeout(timeout_uid='12345', user_id='100500')
     assert answers == ['I repeat the question: what is your name?']
 
     async_task_mock.assert_called_once_with('100500', 10, '12345')
@@ -138,7 +138,7 @@ def test_agent_timeout_did_not_happened():
 
     async_task_mock = mock.Mock()
     # apply async_task(user_id, timeout_uid) after timeout
-    #     agent.query(message=MessageTimeOut(timeout_uid), user_id=user_id)
+    #     agent.process_timeout(timeout_uid=timeout_uid, user_id=user_id)
 
     class FakeTimeoutsBroker(BaseTimeoutsBroker):
         def execute(self, user_id: str, timeout: int, timeout_uid: str):
@@ -154,13 +154,13 @@ def test_agent_timeout_did_not_happened():
         timeouts_broker=fake_timeouts_broker,
     )
 
-    answers = agent.query(message='hello', user_id='100500')
+    answers = agent.process_message(message='hello', user_id='100500')
     assert answers == ['What is your name?']
 
-    answers = agent.query(message='Bob', user_id='100500')
+    answers = agent.process_message(message='Bob', user_id='100500')
     assert answers == ['Nice to meet you Bob! How old are you?']
 
-    answers = agent.query(message=MessageTimeOut(timeout_uid='12345'), user_id='100500')
+    answers = agent.process_timeout(timeout_uid='12345', user_id='100500')
     assert answers == []
 
     async_task_mock.assert_called_once_with('100500', 10, '12345')
@@ -191,13 +191,13 @@ def test_agent_timeout_happened_without_timeouts_broker():
 
     agent = Agent(skill_classifier=skill_classifier)
 
-    answers = agent.query(message='hello', user_id='100500')
+    answers = agent.process_message(message='hello', user_id='100500')
     assert answers == ['What is your name?']
 
-    answers = agent.query(message=MessageTimeOut(timeout_uid=''), user_id='100500')
+    answers = agent.process_timeout(timeout_uid='12345', user_id='100500')
     assert answers == []
 
-    answers = agent.query(message='Bob', user_id='100500')
+    answers = agent.process_message(message='Bob', user_id='100500')
     assert answers == ['Nice to meet you Bob!']
 
 
@@ -242,13 +242,13 @@ def test_agent_timeout_happened_after_other_timeout():
         timeouts_broker=fake_timeouts_broker,
     )
 
-    answers = agent.query(message='hello', user_id='100500')
+    answers = agent.process_message(message='hello', user_id='100500')
     assert answers == ['What is your name?']
 
-    answers = agent.query(message=MessageTimeOut(timeout_uid='12346'), user_id='100500')
+    answers = agent.process_timeout(timeout_uid='12346', user_id='100500')
     assert answers == []
 
-    answers = agent.query(message=MessageTimeOut(timeout_uid='12345'), user_id='100500')
+    answers = agent.process_timeout(timeout_uid='12345', user_id='100500')
     assert answers == ['I repeat the question: what is your name?']
 
     async_task_mock.assert_called_once_with('100500', 10, '12345')

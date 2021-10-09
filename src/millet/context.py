@@ -14,12 +14,14 @@ class UserContext:
         history: List[Any],
         context: dict,
         calls_history: dict,
+        timeout_uid: Optional[str],
     ) -> None:
         self.skill_names = skill_names
         self.state_names = state_names
         self.history = history
         self.context = context
         self.calls_history = calls_history
+        self.timeout_uid = timeout_uid
 
     def __eq__(self, other: Any) -> bool:
         return (
@@ -29,6 +31,7 @@ class UserContext:
             and other.history == self.history
             and other.context == self.context
             and other.calls_history == self.calls_history
+            and other.timeout_uid == self.timeout_uid
         )
 
 
@@ -44,7 +47,14 @@ class BaseContextManager(ABC):
 
     @property
     def _empty_user_context(self) -> UserContext:
-        return UserContext(skill_names=[], state_names=[], history=[], context={}, calls_history={})
+        return UserContext(
+            skill_names=[],
+            state_names=[],
+            history=[],
+            context={},
+            calls_history={},
+            timeout_uid=None,
+        )
 
 
 class RAMContextManager(BaseContextManager):

@@ -6,6 +6,7 @@ from unittest import mock
 
 from millet.context import BaseContextManager, RAMContextManager, UserContext
 from millet.skill import BaseSkill, BaseSkillClassifier
+from millet.timeouts import BaseTimeoutsBroker, MessageTimeOut
 
 
 class Conversation:
@@ -23,11 +24,13 @@ class Agent:
     def __init__(
         self,
         skill_classifier: BaseSkillClassifier,
-        context_manager: Optional[BaseContextManager] = RAMContextManager(),
+        context_manager: Optional[BaseContextManager] = None,
+        timeouts_broker: Optional[BaseTimeoutsBroker] = None,
     ) -> None:
 
         self._skill_classifier = skill_classifier
-        self._context_manager = context_manager
+        self._context_manager = context_manager or RAMContextManager()
+        self._timeouts_broker = timeouts_broker
 
     def conversation_with_user(self, user_id: str) -> Conversation:
         return Conversation(agent=self, user_id=user_id)
@@ -35,11 +38,15 @@ class Agent:
     def query(self, message: Any, user_id: str) -> List[Any]:
         user_context = self._context_manager.get_user_context(user_id)
 
-        answers, new_user_context = self._query(
+        result = self._query(
             message=message,
             user_context=user_context,
             user_id=user_id,
         )
+        if not result:
+            return []
+
+        answers, new_user_context = result
 
         self._context_manager.set_user_context(user_id, new_user_context)
         return answers
@@ -49,7 +56,16 @@ class Agent:
         message: Any,
         user_context: UserContext,
         user_id: str,
-    ) -> Tuple[List[Any], UserContext]:
+    ) -> Optional[Tuple[List[Any], UserContext]]:
+
+        if isinstance(message, MessageTimeOut):
+            if user_context.timeout_uid != message.timeout_uid:
+                # too late
+                return None
+        else:
+            if user_context.timeout_uid:
+                user_context.timeout_uid = None
+
         history = user_context.history
 
         if user_context.skill_names:
@@ -76,6 +92,7 @@ class Agent:
         new_history = []
         new_context = {}
         calls_new = {}
+        new_timeout_uid = []
 
         for skill_name, state_name in zip(skill_names, state_names):
             skill: BaseSkill = self._skill_classifier.skills_map[skill_name]
@@ -166,6 +183,18 @@ class Agent:
 
             skill_result = run_skill()
 
+            if skill_result.timeout:
+                if self._timeouts_broker:
+                    new_timeout_uid = self._timeouts_broker.generate_timeout_uid(
+                        user_id=user_id,
+                        timeout=skill_result.timeout,
+                    )
+                    self._timeouts_broker.execute(
+                        user_id=user_id,
+                        timeout=skill_result.timeout,
+                        timeout_uid=new_timeout_uid,
+                    )
+
             if not skill_result.is_relevant:
                 actual_skill_names = self._skill_classifier.classify(message)
                 if actual_skill_names:
@@ -178,6 +207,7 @@ class Agent:
                             history=[],
                             context={},
                             calls_history={},
+                            timeout_uid=None,
                         ),
                         user_id=user_id,
                     )
@@ -216,5 +246,6 @@ class Agent:
             history=new_history,
             context=new_context,
             calls_history=calls_new,
+            timeout_uid=new_timeout_uid,
         )
         return answers, new_user_context

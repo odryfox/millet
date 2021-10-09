@@ -14,6 +14,7 @@ _empty_user_context = UserContext(
     history=[],
     context={},
     calls_history={},
+    timeout_uid=None,
 )
 
 
@@ -29,6 +30,7 @@ class TestRAMContextManager:
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
             calls_history={},
+            timeout_uid=None,
         )
         self.context_manager.set_user_context('Alice', other_user_context)
 
@@ -43,6 +45,7 @@ class TestRAMContextManager:
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
             calls_history={},
+            timeout_uid=None,
         )
         self.context_manager.set_user_context('Bob', user_context)
 
@@ -57,6 +60,7 @@ class TestRAMContextManager:
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
             calls_history={},
+            timeout_uid=None,
         )
         self.context_manager.set_user_context('Bob', user_context)
 
@@ -75,6 +79,7 @@ class TestPickleSerializer:
             history=['hello, i want to buy iPhone'],
             context={},
             calls_history={},
+            timeout_uid=None,
         )
         serializer = PickleSerializer()
         serialized_user_context = serializer.dumps(user_context)
@@ -99,6 +104,7 @@ class TestRedisContextManager:
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
             calls_history={},
+            timeout_uid=None,
         )
         self.context_manager.set_user_context('Alice', other_user_context)
 
@@ -113,6 +119,7 @@ class TestRedisContextManager:
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
             calls_history={},
+            timeout_uid=None,
         )
         self.context_manager.set_user_context('Bob', user_context)
 
@@ -127,6 +134,7 @@ class TestRedisContextManager:
             history=['hello, i want to buy iPhone'],
             context={'age': '25'},
             calls_history={},
+            timeout_uid=None,
         )
         self.context_manager.set_user_context('Bob', user_context)
 

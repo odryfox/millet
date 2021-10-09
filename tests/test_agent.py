@@ -1,10 +1,10 @@
+import random
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 from unittest import mock
 
 from millet import Agent, BaseSkill, Conversation
 from millet.skill import BaseSkillClassifier
-import random
 
 
 class TestConversation:

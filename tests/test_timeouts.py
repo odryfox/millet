@@ -226,7 +226,7 @@ def test_agent_timeout_happened_after_other_timeout():
 
     async_task_mock = mock.Mock()
     # apply async_task(user_id, timeout_uid) after timeout
-    #     agent.query(message=MessageTimeOut(timeout_uid), user_id=user_id)
+    #     agent.process_message(message=MessageTimeOut(timeout_uid), user_id=user_id)
 
     class FakeTimeoutsBroker(BaseTimeoutsBroker):
         def execute(self, user_id: str, timeout: int, timeout_uid: str):

@@ -57,7 +57,7 @@ A Simple Example
 
 .. code-block:: python
 
-    >>> conversation.query('Hello')
+    >>> conversation.process_message('Hello')
     ['What is your name?']
-    >>> conversation.query('Bob')
+    >>> conversation.process_message('Bob')
     ['Nice to meet you Bob!']

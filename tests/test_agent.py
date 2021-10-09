@@ -770,3 +770,112 @@ class TestAgent:
 
         answers = agent.query(message='hello', user_id=self.default_user_id)
         assert answers == [self.default_user_id]
+
+    def test_action(self):
+        class EchoSkill(BaseSkill):
+            def execute(self, message: str):
+                self.say(message)
+
+        class MeetingSkill(BaseSkill):
+            def execute(self, message: str):
+                name = self.ask('What is your name?')
+                self.say(f'Nice to meet you {name}!')
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'echo': EchoSkill(),
+                    'meeting': MeetingSkill(),
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                if message == 'echo click':
+                    return ['echo']
+                return ['meeting']
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.query(message='hello', user_id=self.default_user_id)
+        assert answers == ['What is your name?']
+
+        answers = agent.query(
+            message='echo click',
+            user_id=self.default_user_id,
+            is_action=True,  # force classify
+        )
+        assert answers == ['echo click']
+
+    def test_process_message(self):
+        class EchoSkill(BaseSkill):
+            def execute(self, message: str):
+                self.say(message)
+
+        class MeetingSkill(BaseSkill):
+            def execute(self, message: str):
+                name = self.ask('What is your name?')
+                self.say(f'Nice to meet you {name}!')
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'echo': EchoSkill(),
+                    'meeting': MeetingSkill(),
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                if message == 'echo click':
+                    return ['echo']
+                return ['meeting']
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.process_message(message='hello', user_id=self.default_user_id)
+        assert answers == ['What is your name?']
+
+        answers = agent.process_message(
+            message='echo click',
+            user_id=self.default_user_id,
+        )
+        assert answers == ['Nice to meet you echo click!']
+
+    def test_process_action(self):
+        class EchoSkill(BaseSkill):
+            def execute(self, message: str):
+                self.say(message)
+
+        class MeetingSkill(BaseSkill):
+            def execute(self, message: str):
+                name = self.ask('What is your name?')
+                self.say(f'Nice to meet you {name}!')
+
+        class SkillClassifier(BaseSkillClassifier):
+            @property
+            def skills_map(self) -> Dict[str, BaseSkill]:
+                return {
+                    'echo': EchoSkill(),
+                    'meeting': MeetingSkill(),
+                }
+
+            def classify(self, message: Any) -> List[str]:
+                if message == 'echo click':
+                    return ['echo']
+                return ['meeting']
+
+        skill_classifier = SkillClassifier()
+
+        agent = Agent(skill_classifier=skill_classifier)
+
+        answers = agent.process_message(message='hello', user_id=self.default_user_id)
+        assert answers == ['What is your name?']
+
+        answers = agent.process_action(
+            message='echo click',
+            user_id=self.default_user_id,
+        )
+        assert answers == ['echo click']

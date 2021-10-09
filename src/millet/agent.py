@@ -35,13 +35,14 @@ class Agent:
     def conversation_with_user(self, user_id: str) -> Conversation:
         return Conversation(agent=self, user_id=user_id)
 
-    def query(self, message: Any, user_id: str) -> List[Any]:
+    def query(self, message: Any, user_id: str, is_action: bool = False) -> List[Any]:
         user_context = self._context_manager.get_user_context(user_id)
 
         result = self._query(
             message=message,
             user_context=user_context,
             user_id=user_id,
+            is_action=is_action,
         )
         if not result:
             return []
@@ -51,12 +52,37 @@ class Agent:
         self._context_manager.set_user_context(user_id, new_user_context)
         return answers
 
+    def process_message(self, message: Any, user_id: str) -> List[Any]:
+        return self.query(message=message, user_id=user_id, is_action=False)
+
+    def process_action(self, message: Any, user_id: str) -> List[Any]:
+        return self.query(message=message, user_id=user_id, is_action=True)
+
     def _query(
         self,
         message: Any,
         user_context: dict,
         user_id: str,
+        is_action: bool,
     ) -> Optional[Tuple[List[Any], dict]]:
+
+        if is_action:
+            actual_skill_names = self._skill_classifier.classify(message)
+            if actual_skill_names:
+                actual_state_names = [None for _ in actual_skill_names]
+                return self._query(
+                    message=message,
+                    user_context=dict(
+                        skill_names=actual_skill_names,
+                        state_names=actual_state_names,
+                        history=[],
+                        context={},
+                        calls_history={},
+                        timeout_uid=None,
+                    ),
+                    user_id=user_id,
+                    is_action=False,
+                )
 
         if (
             isinstance(message, MessageTimeOut)
@@ -209,6 +235,7 @@ class Agent:
                             timeout_uid=None,
                         ),
                         user_id=user_id,
+                        is_action=False,
                     )
 
             answers.extend(skill_result.answers)

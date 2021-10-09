@@ -1,12 +1,20 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Union
 
+from millet.timeouts import MessageTimeOut, MessageTimeOutException
+
 
 class SkillSignal(Exception):
 
-    def __init__(self, is_relevant: bool, direct_to: Optional[str]) -> None:
+    def __init__(
+        self,
+        is_relevant: bool,
+        direct_to: Optional[str],
+        timeout: Optional[int],
+    ) -> None:
         self.is_relevant = is_relevant
         self.direct_to = direct_to
+        self.timeout = timeout
 
 
 class SkillResult:
@@ -18,12 +26,14 @@ class SkillResult:
         is_finished: bool,
         direct_to: Optional[str],
         context: dict,
+        timeout: Optional[int],
     ) -> None:
         self.answers = answers
         self.is_relevant = is_relevant
         self.is_finished = is_finished
         self.direct_to = direct_to
         self.context = context
+        self.timeout = timeout
 
 
 class BaseSkill(ABC):
@@ -53,24 +63,44 @@ class BaseSkill(ABC):
 
         self._answers.append(message)
 
-    def ask(self, question: Any, direct_to: Optional[Union[str, callable]] = None) -> Any:
+    def ask(
+        self,
+        question: Any,
+        direct_to: Optional[Union[str, callable]] = None,
+        timeout: Optional[int] = None,
+    ) -> Any:
         self._have_new_message(message=question)
         return self._need_new_message(
             is_relevant=True,
             direct_to=direct_to,
+            timeout=timeout,
         )
 
-    def specify(self, question: Any, direct_to: Optional[Union[str, callable]] = None) -> Any:
+    def specify(
+        self,
+        question: Any,
+        direct_to: Optional[Union[str, callable]] = None,
+        timeout: Optional[int] = None,
+    ) -> Any:
         self._have_new_message(message=question)
         return self._need_new_message(
             is_relevant=False,
             direct_to=direct_to,
+            timeout=timeout,
         )
 
-    def _need_new_message(self, is_relevant: bool, direct_to: Optional[Union[str, callable]]) -> Any:
+    def _need_new_message(
+        self,
+        is_relevant: bool,
+        direct_to: Optional[Union[str, callable]],
+        timeout: Optional[int],
+    ) -> Any:
         if self._is_silent_mood:
             message = self._history.pop(0)
-            return message
+            if isinstance(message, MessageTimeOut):
+                raise MessageTimeOutException
+            else:
+                return message
 
         if callable(direct_to):
             direct_to = direct_to.__name__
@@ -78,6 +108,7 @@ class BaseSkill(ABC):
         raise SkillSignal(
             is_relevant=is_relevant,
             direct_to=direct_to,
+            timeout=timeout,
         )
 
     def run(
@@ -103,6 +134,7 @@ class BaseSkill(ABC):
         is_finished = False
         is_relevant = True
         direct_to = None
+        timeout = None
 
         try:
             answer = state(initial_message)
@@ -112,6 +144,7 @@ class BaseSkill(ABC):
         except SkillSignal as signal:
             is_relevant = signal.is_relevant
             direct_to = signal.direct_to
+            timeout = signal.timeout
 
         return SkillResult(
             answers=self._answers,
@@ -119,6 +152,7 @@ class BaseSkill(ABC):
             is_finished=is_finished,
             direct_to=direct_to,
             context=self.context,
+            timeout=timeout,
         )
 
 

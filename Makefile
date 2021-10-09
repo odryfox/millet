@@ -8,7 +8,7 @@ isort:
 	isort . -m=3
 
 test:
-	python -m pytest examples && pytest --cov=millet
+	python -m pytest examples -s && pytest --cov=millet -s
 
 build:
 	python setup.py sdist

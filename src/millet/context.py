@@ -1,53 +1,32 @@
 import pickle
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, TypeVar
+from typing import Any, TypeVar
 
 Redis = TypeVar('Redis')
 
 
-class UserContext:
-
-    def __init__(
-        self,
-        skill_names: List[str],
-        state_names: List[Optional[str]],
-        history: List[Any],
-        context: dict,
-        calls_history: dict,
-        timeout_uid: Optional[str],
-    ) -> None:
-        self.skill_names = skill_names
-        self.state_names = state_names
-        self.history = history
-        self.context = context
-        self.calls_history = calls_history
-        self.timeout_uid = timeout_uid
-
-    def __eq__(self, other: Any) -> bool:
-        return (
-            isinstance(other, self.__class__)
-            and other.skill_names == self.skill_names
-            and other.state_names == self.state_names
-            and other.history == self.history
-            and other.context == self.context
-            and other.calls_history == self.calls_history
-            and other.timeout_uid == self.timeout_uid
-        )
+# UserContext is dict for best compatibility
+# skill_names: List[str]
+# state_names: List[Optional[str]]
+# history: List[Any]
+# context: dict
+# calls_history: dict
+# timeout_uid: Optional[str]
 
 
 class BaseContextManager(ABC):
 
     @abstractmethod
-    def set_user_context(self, user_id: str, user_context: UserContext) -> None:
+    def set_user_context(self, user_id: str, user_context: dict) -> None:
         pass
 
     @abstractmethod
-    def get_user_context(self, user_id: str) -> UserContext:
+    def get_user_context(self, user_id: str) -> dict:
         pass
 
     @property
-    def _empty_user_context(self) -> UserContext:
-        return UserContext(
+    def _empty_user_context(self) -> dict:
+        return dict(
             skill_names=[],
             state_names=[],
             history=[],
@@ -62,10 +41,10 @@ class RAMContextManager(BaseContextManager):
     def __init__(self) -> None:
         self._storage = dict()
 
-    def set_user_context(self, user_id: str, user_context: UserContext) -> None:
+    def set_user_context(self, user_id: str, user_context: dict) -> None:
         self._storage[user_id] = user_context
 
-    def get_user_context(self, user_id: str) -> UserContext:
+    def get_user_context(self, user_id: str) -> dict:
         return self._storage.get(user_id, self._empty_user_context)
 
 
@@ -86,17 +65,17 @@ class RedisContextManager(BaseContextManager):
         self._redis = redis
         self._serializer = PickleSerializer()
 
-    def _serialize_user_context(self, user_context: UserContext) -> str:
+    def _serialize_user_context(self, user_context: dict) -> str:
         return self._serializer.dumps(user_context)
 
-    def _deserialize_user_context(self, serialized_user_context: str) -> UserContext:
+    def _deserialize_user_context(self, serialized_user_context: str) -> dict:
         return self._serializer.loads(serialized_user_context)
 
-    def set_user_context(self, user_id: str, user_context: UserContext) -> None:
+    def set_user_context(self, user_id: str, user_context: dict) -> None:
         serialized_user_context = self._serialize_user_context(user_context)
         self._redis.set(user_id, serialized_user_context)
 
-    def get_user_context(self, user_id: str) -> UserContext:
+    def get_user_context(self, user_id: str) -> dict:
         serialized_user_context = self._redis.get(user_id)
         if not serialized_user_context:
             return self._empty_user_context

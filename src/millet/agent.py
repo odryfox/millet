@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Any, List, Optional, Tuple
 from unittest import mock
 
-from millet.context import BaseContextManager, RAMContextManager, UserContext
+from millet.context import BaseContextManager, RAMContextManager
 from millet.skill import BaseSkill, BaseSkillClassifier
 from millet.timeouts import BaseTimeoutsBroker, MessageTimeOut
 
@@ -54,28 +54,27 @@ class Agent:
     def _query(
         self,
         message: Any,
-        user_context: UserContext,
+        user_context: dict,
         user_id: str,
-    ) -> Optional[Tuple[List[Any], UserContext]]:
+    ) -> Optional[Tuple[List[Any], dict]]:
 
-        if isinstance(message, MessageTimeOut):
-            if user_context.timeout_uid != message.timeout_uid:
-                # too late
-                return None
-        else:
-            if user_context.timeout_uid:
-                user_context.timeout_uid = None
+        if (
+            isinstance(message, MessageTimeOut)
+            and user_context['timeout_uid'] != message.timeout_uid
+        ):
+            # too late
+            return None
 
-        history = user_context.history
+        history = user_context['history']
 
-        if user_context.skill_names:
-            skill_names = user_context.skill_names
-            state_names = user_context.state_names
+        if user_context['skill_names']:
+            skill_names = user_context['skill_names']
+            state_names = user_context['state_names']
 
-            context = user_context.context
+            context = user_context['context']
 
-            calls_history_global = deepcopy(user_context.calls_history)
-            calls_history = deepcopy(user_context.calls_history)
+            calls_history_global = deepcopy(user_context['calls_history'])
+            calls_history = deepcopy(user_context['calls_history'])
         else:
             skill_names = self._skill_classifier.classify(message)
             state_names = [None for _ in skill_names]
@@ -201,7 +200,7 @@ class Agent:
                     actual_state_names = [None for _ in actual_skill_names]
                     return self._query(
                         message=message,
-                        user_context=UserContext(
+                        user_context=dict(
                             skill_names=actual_skill_names,
                             state_names=actual_state_names,
                             history=[],
@@ -240,7 +239,7 @@ class Agent:
             calls_history_global = {}
             calls_history = {}
 
-        new_user_context = UserContext(
+        new_user_context = dict(
             skill_names=new_skill_names,
             state_names=new_state_names,
             history=new_history,

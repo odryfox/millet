@@ -164,5 +164,5 @@ class BaseSkillClassifier(ABC):
         pass
 
     @abstractmethod
-    def classify(self, message: Any) -> List[str]:
+    def classify(self, message: Any, user_id: str) -> List[str]:
         pass

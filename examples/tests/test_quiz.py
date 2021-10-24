@@ -17,7 +17,7 @@ def test_quiz(greeting_quiz: List[Dict]):
                 'quiz': skill,
             }
 
-        def classify(self, message: str) -> List[str]:
+        def classify(self, message: str, user_id: str) -> List[str]:
             if 'start' in message:
                 return ['quiz']
             return []

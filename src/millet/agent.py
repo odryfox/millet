@@ -93,7 +93,7 @@ class Agent:
             message = MessageTimeOut()
 
         if is_action:
-            actual_skill_names = self._skill_classifier.classify(message)
+            actual_skill_names = self._skill_classifier.classify(message, user_id)
             if actual_skill_names:
                 actual_state_names = [None for _ in actual_skill_names]
                 return self._query(
@@ -122,7 +122,7 @@ class Agent:
             calls_history_global = deepcopy(user_context['calls_history'])
             calls_history = deepcopy(user_context['calls_history'])
         else:
-            skill_names = self._skill_classifier.classify(message)
+            skill_names = self._skill_classifier.classify(message, user_id)
             state_names = [None for _ in skill_names]
 
             context = {}
@@ -241,7 +241,7 @@ class Agent:
                     )
 
             if not skill_result.is_relevant:
-                actual_skill_names = self._skill_classifier.classify(message)
+                actual_skill_names = self._skill_classifier.classify(message, user_id)
                 if actual_skill_names:
                     actual_state_names = [None for _ in actual_skill_names]
                     return self._query(

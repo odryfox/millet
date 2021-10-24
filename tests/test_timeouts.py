@@ -80,7 +80,7 @@ def test_agent_timeout_happened():
                 'meeting_skill': MeetingSkill(),
             }
 
-        def classify(self, message: Any) -> List[str]:
+        def classify(self, message: Any, user_id: str) -> List[str]:
             return ['meeting_skill']
 
     skill_classifier = SkillClassifier()
@@ -131,7 +131,7 @@ def test_agent_timeout_did_not_happened():
                 'meeting_skill': MeetingSkill(),
             }
 
-        def classify(self, message: Any) -> List[str]:
+        def classify(self, message: Any, user_id: str) -> List[str]:
             return ['meeting_skill']
 
     skill_classifier = SkillClassifier()
@@ -184,7 +184,7 @@ def test_agent_timeout_happened_without_timeouts_broker():
                 'meeting_skill': MeetingSkill(),
             }
 
-        def classify(self, message: Any) -> List[str]:
+        def classify(self, message: Any, user_id: str) -> List[str]:
             return ['meeting_skill']
 
     skill_classifier = SkillClassifier()
@@ -219,7 +219,7 @@ def test_agent_timeout_happened_after_other_timeout():
                 'meeting_skill': MeetingSkill(),
             }
 
-        def classify(self, message: Any) -> List[str]:
+        def classify(self, message: Any, user_id: str) -> List[str]:
             return ['meeting_skill']
 
     skill_classifier = SkillClassifier()

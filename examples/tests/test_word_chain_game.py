@@ -17,7 +17,7 @@ def test_win_game():
                 'game': skill,
             }
 
-        def classify(self, message: str) -> List[str]:
+        def classify(self, message: str, user_id: str) -> List[str]:
             if 'start' in message:
                 return ['game']
             return []
@@ -49,7 +49,7 @@ def test_losw_game():
                 'game': skill,
             }
 
-        def classify(self, message: str) -> List[str]:
+        def classify(self, message: str, user_id: str) -> List[str]:
             if 'start' in message:
                 return ['game']
             return []

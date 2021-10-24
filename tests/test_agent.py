@@ -42,7 +42,7 @@ class TestAgent:
                     'echo': skill,
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['echo']
 
         skill_classifier = SkillClassifier()
@@ -67,7 +67,7 @@ class TestAgent:
                     'echo': skill,
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['echo']
 
         skill_classifier = SkillClassifier()
@@ -94,7 +94,7 @@ class TestAgent:
                     'meeting': skill,
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['meeting']
 
         skill_classifier = SkillClassifier()
@@ -126,7 +126,7 @@ class TestAgent:
                     'meeting': skill,
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['meeting']
 
         skill_classifier = SkillClassifier()
@@ -161,7 +161,7 @@ class TestAgent:
                     'age': skill,
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 skill_names = []
                 if 'age' in message:
                     skill_names.append('age')
@@ -204,7 +204,7 @@ class TestAgent:
                     'age': skill,
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 skill_names = []
                 if 'age' in message:
                     skill_names.append('age')
@@ -241,7 +241,7 @@ class TestAgent:
                     'echo': skill,
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['echo', 'echo']
 
         skill_classifier = SkillClassifier()
@@ -276,7 +276,7 @@ class TestAgent:
                     'age': AgeSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 skill_names = []
                 if 'age' in message:
                     skill_names.append('echo')
@@ -319,7 +319,7 @@ class TestAgent:
                     'age': AgeSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 skill_names = []
                 if 'age' in message:
                     skill_names.append('age')
@@ -365,7 +365,7 @@ class TestAgent:
                     'age': AgeSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 skill_names = []
                 if 'age' in message:
                     skill_names.append('age')
@@ -404,7 +404,7 @@ class TestAgent:
                     'meeting': skill,
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['meeting']
 
         skill_classifier = SkillClassifier()
@@ -445,7 +445,7 @@ class TestAgent:
                     'age': AgeSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 skill_names = []
                 if 'age' in message:
                     skill_names.append('echo')
@@ -491,7 +491,7 @@ class TestAgent:
                     'number': NumberSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['number']
 
         skill_classifier = SkillClassifier()
@@ -535,7 +535,7 @@ class TestAgent:
                     'number': NumberSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['number']
 
         skill_classifier = SkillClassifier()
@@ -580,7 +580,7 @@ class TestAgent:
                     'number': NumberSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['number']
 
         skill_classifier = SkillClassifier()
@@ -626,7 +626,7 @@ class TestAgent:
                     'number': NumberSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['number']
 
         skill_classifier = SkillClassifier()
@@ -679,7 +679,7 @@ class TestAgent:
                     'number': NumberSkill(rand=Rand()),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['number']
 
         skill_classifier = SkillClassifier()
@@ -734,7 +734,7 @@ class TestAgent:
                     'number': NumberSkill(rand_manager=RandManager(rand=Rand())),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['number']
 
         skill_classifier = SkillClassifier()
@@ -763,7 +763,7 @@ class TestAgent:
                     'user_id_skill': skill,
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 return ['user_id_skill']
 
         skill_classifier = SkillClassifier()
@@ -791,7 +791,7 @@ class TestAgent:
                     'meeting': MeetingSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 if message == 'echo click':
                     return ['echo']
                 return ['meeting']
@@ -827,7 +827,7 @@ class TestAgent:
                     'meeting': MeetingSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 if message == 'echo click':
                     return ['echo']
                 return ['meeting']
@@ -863,7 +863,7 @@ class TestAgent:
                     'meeting': MeetingSkill(),
                 }
 
-            def classify(self, message: Any) -> List[str]:
+            def classify(self, message: Any, user_id: str) -> List[str]:
                 if message == 'echo click':
                     return ['echo']
                 return ['meeting']

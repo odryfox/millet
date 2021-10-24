@@ -47,7 +47,7 @@ A Simple Example
                 'meeting': MeetingSkill(),
             }
 
-        def classify(self, message: str) -> List[str]:
+        def classify(self, message: str, user_id: str) -> List[str]:
             return ['meeting']
 
 

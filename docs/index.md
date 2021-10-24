@@ -22,7 +22,7 @@ def meeting_skill(message: str):
 from millet import BaseSkill
 
 class MeetingSkill(BaseSkill):
-    def execute(self, initial_message: str):
+    def execute(self, initial_message: str, user_id: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 ```
@@ -54,7 +54,7 @@ from millet import Agent, BaseSkill, BaseSkillClassifier
 
 
 class MeetingSkill(BaseSkill):
-    def execute(self, initial_message: str):
+    def execute(self, initial_message: str, user_id: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 
@@ -107,7 +107,7 @@ conversation = agent.conversation_with_user('100500')
 from millet import BaseSkill
 
 class MeetingSkill(BaseSkill):
-    def execute(self, initial_message: str):
+    def execute(self, initial_message: str, user_id: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 ```
@@ -121,7 +121,7 @@ class MeetingSkill(BaseSkill):
     
     initial_state_name = 'meet'
     
-    def meet(self, initial_message: str):
+    def meet(self, initial_message: str, user_id: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 ```
@@ -149,11 +149,11 @@ from millet import BaseSkill
 
 
 class AgeSkillWithDirectTo(BaseSkill):
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         age = self.ask('How old are you?')
         self.wait_age(age)
 
-    def wait_age(self, age: str):
+    def wait_age(self, age: str, user_id: str):
         try:
             age = int(age)
         except ValueError:
@@ -172,14 +172,14 @@ from millet import BaseSkill
 
 
 class SkillWithContext(BaseSkill):
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         name = self.ask(question='What is your name?')
         self.context['name'] = name
         self.say(f'Nice to meet you {name}!')
         age = self.ask(f'{name}, how old are you?')
         self.wait_age(age)
 
-    def wait_age(self, age: str):
+    def wait_age(self, age: str, user_id: str):
         name = self.context['name']
         try:
             age = int(age)
@@ -216,7 +216,7 @@ class NumberSkill(BaseSkill):
         'random.randint',
     ]
 
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         number_expected = random.randint(0, 100)  # side function
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -243,7 +243,7 @@ class NumberSkill(BaseSkill):
         (Rand, 'rand'),
     ]
 
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         number_expected = Rand().rand()  # side method
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -265,7 +265,7 @@ class NumberSkill(BaseSkill):
         ('NumberSkill', 'rand'),
     ]
 
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         number_expected = self.rand()  # side self-method
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -309,7 +309,7 @@ from millet.timeouts import (
 )
 
 class MeetingSkill(BaseSkill):
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         try:
             name = self.ask('What is your name?', timeout=10)
         except MessageTimeOutException:

@@ -48,8 +48,6 @@ class BaseSkill(ABC):
     side_functions = []
     side_methods = []
 
-    user_id = ''
-
     @property
     def _is_silent_mood(self):
         return bool(self._history)
@@ -114,6 +112,7 @@ class BaseSkill(ABC):
     def run(
         self,
         message: Any,
+        user_id: str,
         history: List[Any],
         state_name: Optional[str],
         context: dict,
@@ -137,7 +136,7 @@ class BaseSkill(ABC):
         timeout = None
 
         try:
-            answer = state(initial_message)
+            answer = state(initial_message, user_id)
             if answer is not None:
                 self._answers.append(answer)
             is_finished = True

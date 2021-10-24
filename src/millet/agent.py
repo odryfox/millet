@@ -141,7 +141,6 @@ class Agent:
 
         for skill_name, state_name in zip(skill_names, state_names):
             skill: BaseSkill = self._skill_classifier.skills_map[skill_name]
-            skill.user_id = user_id
 
             calls_current = {}
 
@@ -217,6 +216,7 @@ class Agent:
             def run_skill(*args):
                 skill_result = skill.run(
                     message=message,
+                    user_id=user_id,
                     history=deepcopy(history),
                     state_name=state_name,
                     context=context,

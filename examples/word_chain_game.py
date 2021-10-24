@@ -20,7 +20,7 @@ class WordChainSkill(BaseSkill):
         self.vocabulary = vocabulary
         self.history_words = list()
 
-    def execute(self, initial_message: str):
+    def execute(self, initial_message: str, user_id: str):
         self.say('Lets start')
         self.my_move()
 
@@ -33,7 +33,7 @@ class WordChainSkill(BaseSkill):
         self.history_words.append(word)
         self.ask(f'My word: {word}', direct_to=self.user_move)
 
-    def user_move(self, user_word: str):
+    def user_move(self, user_word: str, user_id: str):
         if not _word_is_correct(user_word, self.vocabulary, self.history_words):
             self.say('You are lose!')
             return

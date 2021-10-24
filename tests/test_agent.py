@@ -30,7 +30,7 @@ class TestAgent:
     def test_process_message(self):
 
         class EchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.say(message)
 
         skill = EchoSkill()
@@ -55,7 +55,7 @@ class TestAgent:
     def test_conversation_with_user(self):
 
         class EchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.say(message)
 
         skill = EchoSkill()
@@ -81,7 +81,7 @@ class TestAgent:
     def test_query_with_ask(self):
 
         class MeetingSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 name = self.ask('What is your name?')
                 self.say(f'Nice to meet you {name}!')
 
@@ -111,10 +111,10 @@ class TestAgent:
 
         class MeetingSkillWithStates(BaseSkill):
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.ask('What is your name?', direct_to='meeting')
 
-            def meeting(self, name: str):
+            def meeting(self, name: str, user_id: str):
                 self.say(f'Nice to meet you {name}!')
 
         skill = MeetingSkillWithStates()
@@ -142,7 +142,7 @@ class TestAgent:
     def test_query_with_specify(self):
 
         class AgeSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 age = self.ask('How old are you?')
 
                 try:
@@ -183,11 +183,11 @@ class TestAgent:
     def test_query_with_specify_with_direct_to(self):
 
         class AgeSkillWithDirectTo(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 age = self.ask('How old are you?')
-                self.wait_age(age)
+                self.wait_age(age, user_id)
 
-            def wait_age(self, age: str):
+            def wait_age(self, age: str, user_id: str):
                 try:
                     age = int(age)
                 except ValueError:
@@ -229,7 +229,7 @@ class TestAgent:
     def test_multi_skills(self):
 
         class EchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.say(message)
 
         skill = EchoSkill()
@@ -254,11 +254,11 @@ class TestAgent:
     def test_multi_skills_and_one_continuously(self):
 
         class EchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.say(message)
 
         class AgeSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 age = self.ask('How old are you?')
 
                 try:
@@ -299,7 +299,7 @@ class TestAgent:
     def test_long_skill(self):
 
         class AgeSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 name = self.ask('What is your name?')
                 self.say(f'Nice to meet you {name}!')
 
@@ -343,11 +343,11 @@ class TestAgent:
 
     def test_interrupt_skill(self):
         class GreetingSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.say('Hello')
 
         class AgeSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 age = self.ask('How old are you?')
 
                 try:
@@ -387,11 +387,11 @@ class TestAgent:
 
         class MeetingSkillWithStates(BaseSkill):
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.context['greeting'] = 'Nice to meet you'
                 self.ask('What is your name?', direct_to='meeting')
 
-            def meeting(self, name: str):
+            def meeting(self, name: str, user_id: str):
                 greeting = self.context['greeting']
                 self.say(f'{greeting} {name}!')
 
@@ -420,12 +420,12 @@ class TestAgent:
     def test_multi_skills_and_context_using(self):
 
         class EchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.context['age'] = 100500
                 self.say(message)
 
         class AgeSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 age = self.context.get('age')
                 if age is None:
                     age = self.ask('How old are you?')
@@ -476,7 +476,7 @@ class TestAgent:
                 'random.randint',
             ]
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 number_expected = random.randint(0, 100)  # side function
                 number_actual = int(self.ask('Whats number?'))
                 if number_actual == number_expected:
@@ -517,7 +517,7 @@ class TestAgent:
                 ('NumberSkill', 'rand'),
             ]
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 number_expected = self.rand()  # side self-method
                 number_actual = int(self.ask('Whats number?'))
                 if number_actual == number_expected:
@@ -565,7 +565,7 @@ class TestAgent:
                 (Rand, 'rand'),
             ]
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 number_expected = Rand().rand()  # side method
                 number_actual = int(self.ask('Whats number?'))
                 if number_actual == number_expected:
@@ -611,7 +611,7 @@ class TestAgent:
                 (Rand, 'rand'),
             ]
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 number_expected = Rand.rand()  # side cls-method
                 number_actual = int(self.ask('Whats number?'))
                 if number_actual == number_expected:
@@ -664,7 +664,7 @@ class TestAgent:
             def __init__(self, rand: IRand):
                 self.rand = rand
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 number_expected = self.rand.rand()  # side method
                 number_actual = int(self.ask('Whats number?'))
                 if number_actual == number_expected:
@@ -719,7 +719,7 @@ class TestAgent:
             def __init__(self, rand_manager):
                 self.rand_manager = rand_manager
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 number_expected = self.rand_manager.execute()  # side method
                 number_actual = int(self.ask('Whats number?'))
                 if number_actual == number_expected:
@@ -751,8 +751,8 @@ class TestAgent:
 
     def test_user_id(self):
         class UserIdSkill(BaseSkill):
-            def execute(self, message: str):
-                self.say(self.user_id)
+            def execute(self, message: str, user_id: str):
+                self.say(user_id)
 
         skill = UserIdSkill()
 
@@ -775,11 +775,11 @@ class TestAgent:
 
     def test_action(self):
         class EchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.say(message)
 
         class MeetingSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 name = self.ask('What is your name?')
                 self.say(f'Nice to meet you {name}!')
 
@@ -811,11 +811,11 @@ class TestAgent:
 
     def test_process_message(self):
         class EchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.say(message)
 
         class MeetingSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 name = self.ask('What is your name?')
                 self.say(f'Nice to meet you {name}!')
 
@@ -847,11 +847,11 @@ class TestAgent:
 
     def test_process_action(self):
         class EchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.say(message)
 
         class MeetingSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 name = self.ask('What is your name?')
                 self.say(f'Nice to meet you {name}!')
 

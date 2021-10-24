@@ -12,7 +12,7 @@ from millet.timeouts import (
 def test_skill_timeout_happened():
 
     class MeetingSkill(BaseSkill):
-        def execute(self, message: str):
+        def execute(self, message: str, user_id: str):
             try:
                 name = self.ask('What is your name?', timeout=10)
             except MessageTimeOutException:
@@ -23,7 +23,7 @@ def test_skill_timeout_happened():
     skill = MeetingSkill()
 
     result = skill.run(
-        message='hello', history=[], state_name=None, context={}
+        message='hello', user_id='100500', history=[], state_name=None, context={}
     )
 
     assert result.answers == ['What is your name?']
@@ -35,6 +35,7 @@ def test_skill_timeout_happened():
 
     result = skill.run(
         message=MessageTimeOut(),
+        user_id='100500',
         history=['hello'],
         state_name=None,
         context={},
@@ -49,6 +50,7 @@ def test_skill_timeout_happened():
 
     result = skill.run(
         message='Bob',
+        user_id='100500',
         history=['hello', MessageTimeOut()],
         state_name=None,
         context={},
@@ -65,7 +67,7 @@ def test_skill_timeout_happened():
 def test_agent_timeout_happened():
 
     class MeetingSkill(BaseSkill):
-        def execute(self, message: str):
+        def execute(self, message: str, user_id: str):
             try:
                 name = self.ask('What is your name?', timeout=10)
             except MessageTimeOutException:
@@ -115,7 +117,7 @@ def test_agent_timeout_happened():
 def test_agent_timeout_did_not_happened():
 
     class MeetingSkill(BaseSkill):
-        def execute(self, message: str):
+        def execute(self, message: str, user_id: str):
             try:
                 name = self.ask('What is your name?', timeout=10)
             except MessageTimeOutException:
@@ -169,7 +171,7 @@ def test_agent_timeout_did_not_happened():
 def test_agent_timeout_happened_without_timeouts_broker():
 
     class MeetingSkill(BaseSkill):
-        def execute(self, message: str):
+        def execute(self, message: str, user_id: str):
             try:
                 name = self.ask('What is your name?', timeout=10)
             except MessageTimeOutException:
@@ -204,7 +206,7 @@ def test_agent_timeout_happened_without_timeouts_broker():
 def test_agent_timeout_happened_after_other_timeout():
 
     class MeetingSkill(BaseSkill):
-        def execute(self, message: str):
+        def execute(self, message: str, user_id: str):
             try:
                 name = self.ask('What is your name?', timeout=10)
             except MessageTimeOutException:

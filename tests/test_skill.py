@@ -6,13 +6,13 @@ class TestSkill:
     def test_say(self):
 
         class EchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.say(message)
 
         skill = EchoSkill()
 
         result = skill.run(
-            message='hello', history=[], state_name=None, context={}
+            message='hello', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['hello']
@@ -22,7 +22,7 @@ class TestSkill:
         assert result.context == {}
 
         result = skill.run(
-            message='bye', history=[], state_name=None, context=result.context
+            message='bye', user_id='100500', history=[], state_name=None, context=result.context
         )
 
         assert result.answers == ['bye']
@@ -34,13 +34,13 @@ class TestSkill:
     def test_say_return(self):
 
         class EchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 return message
 
         skill = EchoSkill()
 
         result = skill.run(
-            message='hello', history=[], state_name=None, context={}
+            message='hello', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['hello']
@@ -52,14 +52,14 @@ class TestSkill:
     def test_double_say(self):
 
         class DoubleEchoSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.say(message)
                 self.say(message)
 
         skill = DoubleEchoSkill()
 
         result = skill.run(
-            message='hello', history=[], state_name=None, context={}
+            message='hello', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['hello', 'hello']
@@ -69,7 +69,7 @@ class TestSkill:
         assert result.context == {}
 
         result = skill.run(
-            message='bye', history=[], state_name=None, context=result.context
+            message='bye', user_id='100500', history=[], state_name=None, context=result.context
         )
 
         assert result.answers == ['bye', 'bye']
@@ -81,14 +81,14 @@ class TestSkill:
     def test_ask(self):
 
         class MeetingSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 name = self.ask('What is your name?')
                 self.say(f'Nice to meet you {name}!')
 
         skill = MeetingSkill()
 
         result = skill.run(
-            message='hello', history=[], state_name=None, context={}
+            message='hello', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['What is your name?']
@@ -98,7 +98,7 @@ class TestSkill:
         assert result.context == {}
 
         result = skill.run(
-            message='Bob', history=['hello'], state_name=None, context=result.context
+            message='Bob', user_id='100500', history=['hello'], state_name=None, context=result.context
         )
 
         assert result.answers == ['Nice to meet you Bob!']
@@ -111,16 +111,16 @@ class TestSkill:
 
         class MeetingSkillWithStates(BaseSkill):
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.ask('What is your name?', direct_to='meeting')
 
-            def meeting(self, name: str):
+            def meeting(self, name: str, user_id: str):
                 self.say(f'Nice to meet you {name}!')
 
         skill = MeetingSkillWithStates()
 
         result = skill.run(
-            message='hello', history=[], state_name=None, context={}
+            message='hello', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['What is your name?']
@@ -130,7 +130,7 @@ class TestSkill:
         assert result.context == {}
 
         result = skill.run(
-            message='Bob', history=[], state_name='meeting', context=result.context
+            message='Bob', user_id='100500', history=[], state_name='meeting', context=result.context
         )
 
         assert result.answers == ['Nice to meet you Bob!']
@@ -143,16 +143,16 @@ class TestSkill:
 
         class MeetingSkillWithStates(BaseSkill):
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.ask('What is your name?', direct_to=self.meeting)
 
-            def meeting(self, name: str):
+            def meeting(self, name: str, user_id: str):
                 self.say(f'Nice to meet you {name}!')
 
         skill = MeetingSkillWithStates()
 
         result = skill.run(
-            message='hello', history=[], state_name=None, context={}
+            message='hello', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['What is your name?']
@@ -162,7 +162,7 @@ class TestSkill:
         assert result.context == {}
 
         result = skill.run(
-            message='Bob', history=[], state_name='meeting', context=result.context
+            message='Bob', user_id='100500', history=[], state_name='meeting', context=result.context
         )
 
         assert result.answers == ['Nice to meet you Bob!']
@@ -174,7 +174,7 @@ class TestSkill:
     def test_specify(self):
 
         class AgeSkill(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 try:
                     age = int(message)
                 except ValueError:
@@ -185,7 +185,7 @@ class TestSkill:
         skill = AgeSkill()
 
         result = skill.run(
-            message='twenty four', history=[], state_name=None, context={}
+            message='twenty four', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['Are you sure?']
@@ -195,7 +195,7 @@ class TestSkill:
         assert result.context == {}
 
         result = skill.run(
-            message='24', history=['twenty four'],
+            message='24', user_id='100500', history=['twenty four'],
             state_name=None, context=result.context,
         )
 
@@ -208,7 +208,7 @@ class TestSkill:
     def test_specify_with_direct_to(self):
 
         class AgeSkillWithDirectTo(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 try:
                     age = int(message)
                 except ValueError:
@@ -219,7 +219,7 @@ class TestSkill:
         skill = AgeSkillWithDirectTo()
 
         result = skill.run(
-            message='twenty four', history=[], state_name=None, context={}
+            message='twenty four', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['Are you sure?']
@@ -229,7 +229,7 @@ class TestSkill:
         assert result.context == {}
 
         result = skill.run(
-            message='24', history=[], state_name='execute', context=result.context
+            message='24', user_id='100500', history=[], state_name='execute', context=result.context
         )
 
         assert result.answers == ['You are 24 years old']
@@ -241,7 +241,7 @@ class TestSkill:
     def test_specify_with_direct_to_callable(self):
 
         class AgeSkillWithDirectTo(BaseSkill):
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 try:
                     age = int(message)
                 except ValueError:
@@ -252,7 +252,7 @@ class TestSkill:
         skill = AgeSkillWithDirectTo()
 
         result = skill.run(
-            message='twenty four', history=[], state_name=None, context={}
+            message='twenty four', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['Are you sure?']
@@ -262,7 +262,7 @@ class TestSkill:
         assert result.context == {}
 
         result = skill.run(
-            message='24', history=[], state_name='execute', context=result.context
+            message='24', user_id='100500', history=[], state_name='execute', context=result.context
         )
 
         assert result.answers == ['You are 24 years old']
@@ -277,13 +277,13 @@ class TestSkill:
 
             initial_state_name = 'echo'
 
-            def echo(self, message: str):
+            def echo(self, message: str, user_id: str):
                 self.say(message)
 
         skill = EchoSkill()
 
         result = skill.run(
-            message='hello', history=[], state_name=None, context={}
+            message='hello', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['hello']
@@ -293,7 +293,7 @@ class TestSkill:
         assert result.context == {}
 
         result = skill.run(
-            message='bye', history=[], state_name='echo', context=result.context
+            message='bye', user_id='100500', history=[], state_name='echo', context=result.context
         )
 
         assert result.answers == ['bye']
@@ -305,18 +305,18 @@ class TestSkill:
     def test_context_using(self):
         class MeetingSkillWithStates(BaseSkill):
 
-            def execute(self, message: str):
+            def execute(self, message: str, user_id: str):
                 self.context['greeting'] = 'Nice to meet you'
                 self.ask('What is your name?', direct_to=self.meeting)
 
-            def meeting(self, name: str):
+            def meeting(self, name: str, user_id: str):
                 greeting = self.context['greeting']
                 self.say(f'{greeting} {name}!')
 
         skill = MeetingSkillWithStates()
 
         result = skill.run(
-            message='hello', history=[], state_name=None, context={}
+            message='hello', user_id='100500', history=[], state_name=None, context={}
         )
 
         assert result.answers == ['What is your name?']
@@ -326,7 +326,7 @@ class TestSkill:
         assert result.context == {'greeting': 'Nice to meet you'}
 
         result = skill.run(
-            message='Bob', history=[], state_name='meeting', context=result.context
+            message='Bob', user_id='100500', history=[], state_name='meeting', context=result.context
         )
 
         assert result.answers == ['Nice to meet you Bob!']

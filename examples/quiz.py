@@ -34,7 +34,7 @@ class QuizSkill(BaseSkill):
         self.current_question_number = 0
         self.answers = {}
 
-    def execute(self, initial_message: str):
+    def execute(self, initial_message: str, user_id: str):
         self.say('Lets go')
         self.ask_current_question()
 
@@ -42,7 +42,7 @@ class QuizSkill(BaseSkill):
         question_text = self.quiz[self.current_question_number]['question']
         self.ask(question=question_text, direct_to=self.waiting_answer)
 
-    def waiting_answer(self, answer: str):
+    def waiting_answer(self, answer: str, user_id: str):
         question = self.quiz[self.current_question_number]
         answer_validation = question['answer_validation']
         clear_answer, error = _interpret_answer(answer_validation, answer)

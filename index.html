@@ -77,7 +77,7 @@
 <pre><code class="language-python">from millet import BaseSkill
 
 class MeetingSkill(BaseSkill):
-    def execute(self, initial_message: str):
+    def execute(self, initial_message: str, user_id: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 </code></pre>
@@ -100,7 +100,7 @@ from millet import Agent, BaseSkill, BaseSkillClassifier
 
 
 class MeetingSkill(BaseSkill):
-    def execute(self, initial_message: str):
+    def execute(self, initial_message: str, user_id: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 
@@ -112,7 +112,7 @@ class SkillClassifier(BaseSkillClassifier):
             'meeting': MeetingSkill(),
         }
 
-    def classify(self, message: str) -&gt; List[str]:
+    def classify(self, message: str, user_id: str) -&gt; List[str]:
         return ['meeting']
 
 
@@ -139,7 +139,7 @@ conversation = agent.conversation_with_user('100500')
 <pre><code class="language-python">from millet import BaseSkill
 
 class MeetingSkill(BaseSkill):
-    def execute(self, initial_message: str):
+    def execute(self, initial_message: str, user_id: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 </code></pre>
@@ -150,7 +150,7 @@ class MeetingSkill(BaseSkill):
 
     initial_state_name = 'meet'
 
-    def meet(self, initial_message: str):
+    def meet(self, initial_message: str, user_id: str):
         name = self.ask(question='What is your name?')
         self.say(f'Nice to meet you {name}!')
 </code></pre>
@@ -169,11 +169,11 @@ class MeetingSkill(BaseSkill):
 
 
 class AgeSkillWithDirectTo(BaseSkill):
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         age = self.ask('How old are you?')
         self.wait_age(age)
 
-    def wait_age(self, age: str):
+    def wait_age(self, age: str, user_id: str):
         try:
             age = int(age)
         except ValueError:
@@ -188,14 +188,14 @@ class AgeSkillWithDirectTo(BaseSkill):
 
 
 class SkillWithContext(BaseSkill):
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         name = self.ask(question='What is your name?')
         self.context['name'] = name
         self.say(f'Nice to meet you {name}!')
         age = self.ask(f'{name}, how old are you?')
         self.wait_age(age)
 
-    def wait_age(self, age: str):
+    def wait_age(self, age: str, user_id: str):
         name = self.context['name']
         try:
             age = int(age)
@@ -225,7 +225,7 @@ class NumberSkill(BaseSkill):
         'random.randint',
     ]
 
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         number_expected = random.randint(0, 100)  # side function
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -249,7 +249,7 @@ class NumberSkill(BaseSkill):
         (Rand, 'rand'),
     ]
 
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         number_expected = Rand().rand()  # side method
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -268,7 +268,7 @@ class NumberSkill(BaseSkill):
         ('NumberSkill', 'rand'),
     ]
 
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         number_expected = self.rand()  # side self-method
         number_actual = int(self.ask('Whats number?'))
         if number_actual == number_expected:
@@ -304,7 +304,7 @@ from millet.timeouts import (
 )
 
 class MeetingSkill(BaseSkill):
-    def execute(self, message: str):
+    def execute(self, message: str, user_id: str):
         try:
             name = self.ask('What is your name?', timeout=10)
         except MessageTimeOutException:
@@ -325,7 +325,7 @@ class SkillClassifier(BaseSkillClassifier):
     def skills_map(self) -&gt; Dict[str, BaseSkill]:
         return {}
 
-    def classify(self, message: str) -&gt; List[str]:
+    def classify(self, message: str, user_id: str) -&gt; List[str]:
         return []
 
 skill_classifier = SkillClassifier()
@@ -433,5 +433,5 @@ https://github.com/odryfox/millet/tree/master/examples</p></div>
 
 <!--
 MkDocs version : 1.1.2
-Build Date UTC : 2021-10-09 10:26:16.962928+00:00
+Build Date UTC : 2021-10-24 10:03:27.133904+00:00
 -->
